@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.nuonuo.mapper.orderMapper">
+
+    <select id="getDBAllOrgList" resultType="java.util.Map">
+        select id_num,code,AppKey,AppSecret,access_token,refresh_token,user_id,org_id,app_name,update_time from XXX_code_token
+    </select>
+
+    <update id="updateOrgToken" parameterType="java.util.Map">
+        update XXX_code_token set access_token = #{access_token},refresh_token = #{refresh_token},update_time = GETDATE()
+        where org_id = #{org_id}
+    </update>
+
+    <select id="getTokenByAppKey" parameterType="java.lang.String" resultType="java.lang.String">
+        select access_token from XXX_code_token where AppKey = #{AppKey}
+    </select>
+
+    <select id="getAppKeySecretByAppKey" parameterType="java.lang.String" resultType="java.util.Map">
+        select AppKey,AppSecret from XXX_code_token where org_id = #{OrgId}
+    </select>
+
+</mapper>
