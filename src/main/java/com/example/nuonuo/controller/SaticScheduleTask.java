@@ -1,6 +1,7 @@
 package com.example.nuonuo.controller;
 
 import com.example.nuonuo.service.TokenService;
+import com.example.nuonuo.utils.NuonuoTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -17,12 +18,12 @@ public class SaticScheduleTask {
     @Autowired
     private TokenService tokenService;
 
-    //每天凌晨6点执行
-    @Scheduled(cron = "0 0 6 * * ?")
+    //每隔20个小时 更新一次 token
+    @Scheduled(cron = "* * 0/20 * * ?")
     private void configureTasks() {
         System.err.println("-------------------- 执行静态定时任务开始: " + LocalDateTime.now() + "--------------------");
         try{
-            tokenService.refreshToken();
+            NuonuoTest.getToken();
         }catch (Exception e){
             e.printStackTrace();
         }

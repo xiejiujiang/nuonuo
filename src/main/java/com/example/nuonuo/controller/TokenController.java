@@ -18,6 +18,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.List;
+import java.util.Map;
 
 @CrossOrigin
 @Controller
@@ -72,32 +74,27 @@ public class TokenController {
 
     // ------------------------------------------------  以下是业务接口 -----------------------------------------------------//
 
-    //打开 excel 导入页面
-    @RequestMapping(value="/openExceldeal", method = {RequestMethod.GET,RequestMethod.POST})
-    public ModelAndView openExceldeal(HttpServletRequest request, HttpServletResponse response) {
+    //扫码后，打开的单据信息确认页面。
+    @RequestMapping(value="/openRecode", method = {RequestMethod.GET,RequestMethod.POST})
+    public ModelAndView openRecode(HttpServletRequest request, HttpServletResponse response) {
         ModelAndView mav = new ModelAndView();
-        LOGGER.info("-------------------  打开打开 excel 导入页面 事件  ----------------------");
-        mav.setViewName("excels/openExceldeal");
+        LOGGER.info("-------------------  扫码后，打开的单据信息确认页面  ----------------------");
+        String code = request.getParameter("code");
+        List<Map<String,Object>> redetailList = orderMapper.getRedetailList(code);
+        mav.addObject("redetailList",redetailList);
+        mav.setViewName("excels/openRecode");
         return mav;
     }
 
-    // 导入excel , 解析出 表格中的某个sheet 某行开始的 某几列
-    @RequestMapping(value="/autoexcelinfo", method = {RequestMethod.GET,RequestMethod.POST})
-    public @ResponseBody String autoexcelinfo(@RequestParam(value = "file") MultipartFile file, HttpServletRequest request, HttpServletResponse response) {
-        try{
 
-        }catch (Exception e){
-            e.printStackTrace();
-            return "参数错误，请重试！";
-        }
-        return  "";
-    }
-
-
-
-    @RequestMapping(value="/getDistricntKC", method = {RequestMethod.GET,RequestMethod.POST})
+    //提交开票信息 到  诺诺网 ， 并返回结果，前端是 ajax 访问
+    @RequestMapping(value="/commitNuonuo", method = {RequestMethod.GET,RequestMethod.POST})
     public @ResponseBody String getDistricntKC(HttpServletRequest request, HttpServletResponse response) throws Exception{
-
-        return "";
+        String code = request.getParameter("code");//零售单的单号
+        String content = request.getParameter("");
+        String result = NuonuoTest.CommitNuonuo(content);
+        orderMapper.updateRetailKPBycode(code);//如果成功，备注 多个 "Y" ，并增加一个 开票成功的标志（自定义字段）
+        return result;
     }
+
 }

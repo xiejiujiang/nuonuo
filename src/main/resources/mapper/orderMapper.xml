@@ -19,4 +19,15 @@
         select AppKey,AppSecret from XXX_code_token where org_id = #{OrgId}
     </select>
 
+    <select id="getRedetailList" parameterType="java.lang.String">
+        select t4.name as storeName,t1.voucherdate,t3.name,t2.quanity,t2.taxAmount
+        from re_retail t1,re_retail_b t2,AA_inventory t3,AA_DR_Store t4
+        where t1.code = #{code} and t1.id = t2.idRetailDTO and t2.idInventory = t3.id and t1.idStore = t4.id
+    </select>
+
+    <update id="updateRetailKPBycode" parameterType="java.lang.String">
+        update re_retail
+        set memo = memo + 'Y' , priusefdeceml2 = '1'
+        where code  = #{code}
+    </update>
 </mapper>

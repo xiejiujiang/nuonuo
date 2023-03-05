@@ -24,4 +24,8 @@ public interface orderMapper {
     //根据 OrgId 获取 当前的 AppKey 和 AppSecret
     Map<String,String> getAppKeySecretByAppKey(@Param("OrgId") String OrgId);
 
+    List<Map<String,Object>> getRedetailList(String code);
+
+    void updateRetailKPBycode(String code);
+
 }
