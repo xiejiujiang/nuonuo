@@ -10,15 +10,15 @@ public class NuonuoTest {
     // 普票： 只需要一些基本信息： 企业名称  税号 等
     // 专票： 只能是 一般纳税人 才能 给他开 专票。，专票 必须要填 账号，地址，税号，企业名称。等全部信息
     // 收票方  可以  使用 诺诺网的模糊查询，快速填入开票信息，
-    public static String CommitNuonuo(String content){
+    public static String CommitNuonuo(String appKey,String appSecret,String taxnum,String token,String content){
         NNOpenSDK sdk = NNOpenSDK.getIntance();
-        String taxnum = "91310117MA1J567H32"; // 授权企业税号  91310117MA1J567H32  睿肄博，   测试：339901999999199
-        String appKey = "27470641";
-        String appSecret = "509A83CA7A3B4A3C";
+        //String taxnum = "91310117MA1J567H32"; // 授权企业税号  91310117MA1J567H32  睿肄博，   测试：339901999999199
+        //String appKey = "27470641";
+        //String appSecret = "509A83CA7A3B4A3C";
         String method = "nuonuo.OpeMplatform.requestBillingNew"; // API方法名
-        String token = "179f29c1a92185b319a69c0nqqbx5tms"; // 访问令牌
         //正式环境	https://sdk.nuonuo.com/open/v1/services
         //沙箱环境	https://sandbox.nuonuocs.cn/open/v1/services
+
         String url = "https://sdk.nuonuo.com/open/v1/services"; // SDK请求地址
         String senid = UUID.randomUUID().toString().replace("-", ""); // 唯一标识，32位随机码，无需修改，保持默认即可
         String result = sdk.sendPostSyncRequest(url, senid, appKey, appSecret, token, taxnum, method, content);
@@ -29,17 +29,19 @@ public class NuonuoTest {
     public static String getToken(){
         NNOpenSDK sdk = NNOpenSDK.getIntance();
         String token = sdk.getMerchantToken("27470641","509A83CA7A3B4A3C");
+        System.out.println("token == " + token);
         return token;
     }
 
 
     public static void main(String[] args) {
+        //getToken();
         NNOpenSDK sdk = NNOpenSDK.getIntance();
         String taxnum = "91310117MA1J567H32"; // 授权企业税号  91310117MA1J567H32  睿肄博，   测试：339901999999199
         String appKey = "27470641";
         String appSecret = "509A83CA7A3B4A3C";
         String method = "nuonuo.OpeMplatform.requestBillingNew"; // API方法名
-        String token = "179f29c1a92185b319a69c0nqqbx5tms"; // 访问令牌
+        String token = "179f29c1a92185b319a69c0ent0nsahs"; // 访问令牌 ????
 
         String content = "{\n" +
                 "  \"order\": {\n" +
@@ -67,7 +69,7 @@ public class NuonuoTest {
                 "        \"taxRate\": \"0.13\",\n" +
                 "        \"unit\": \"台\",\n" +
                 "        \"price\": \"1\",\n" +
-                "        \"goodsCode\": \"HUAWEI-BJB-01\",\n" +
+               // "        \"goodsCode\": \"TEST001\",\n" +
                 "        \"goodsName\": \"华为笔记本电脑1\"\n" +
                 "      },\n" +
                 "      {\n" +
@@ -76,7 +78,7 @@ public class NuonuoTest {
                 "        \"taxRate\": \"0.13\",\n" +
                 "        \"unit\": \"台\",\n" +
                 "        \"price\": \"2\",\n" +
-                "        \"goodsCode\": \"HUAWEI-BJB-01\",\n" +
+                //"        \"goodsCode\": \"TEST002\",\n" +
                 "        \"goodsName\": \"华为笔记本电脑2\"\n" +
                 "      }\n" +
                 "    ]\n" +

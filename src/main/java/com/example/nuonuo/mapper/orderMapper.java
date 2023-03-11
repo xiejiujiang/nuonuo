@@ -28,4 +28,6 @@ public interface orderMapper {
 
     void updateRetailKPBycode(String code);
 
+    Map<String,Object>  getDistinctTaxByRetaiCode(String code);
+
 }

@@ -79,10 +79,37 @@ public class TokenController {
     public ModelAndView openRecode(HttpServletRequest request, HttpServletResponse response) {
         ModelAndView mav = new ModelAndView();
         LOGGER.info("-------------------  扫码后，打开的单据信息确认页面  ----------------------");
-        String code = request.getParameter("code");
+        String code = request.getParameter("code"); // 零售单的单号
         List<Map<String,Object>> redetailList = orderMapper.getRedetailList(code);
+        if(redetailList == null || redetailList.size() == 0 ){
+            LOGGER.info("-------------------    哈哈哈哈哈哈哈哈哈   -------------------");
+        }else{
+            LOGGER.info("-------------------    小飞棍来喏！  -------------------");
+        }
         mav.addObject("redetailList",redetailList);
-        mav.setViewName("excels/openRecode");
+        mav.setViewName("sccode/openRecode");
+        return mav;
+    }
+
+
+    @RequestMapping(value="/open1", method = {RequestMethod.GET,RequestMethod.POST})
+    public ModelAndView open1(HttpServletRequest request, HttpServletResponse response) {
+        ModelAndView mav = new ModelAndView();
+        mav.setViewName("sccode/form");
+        return mav;
+    }
+
+    @RequestMapping(value="/open2", method = {RequestMethod.GET,RequestMethod.POST})
+    public ModelAndView open2(HttpServletRequest request, HttpServletResponse response) {
+        ModelAndView mav = new ModelAndView();
+        mav.setViewName("sccode/openRecode");
+        return mav;
+    }
+
+    @RequestMapping(value="/open3", method = {RequestMethod.GET,RequestMethod.POST})
+    public ModelAndView open3(HttpServletRequest request, HttpServletResponse response) {
+        ModelAndView mav = new ModelAndView();
+        mav.setViewName("sccode/result");
         return mav;
     }
 
@@ -91,8 +118,16 @@ public class TokenController {
     @RequestMapping(value="/commitNuonuo", method = {RequestMethod.GET,RequestMethod.POST})
     public @ResponseBody String getDistricntKC(HttpServletRequest request, HttpServletResponse response) throws Exception{
         String code = request.getParameter("code");//零售单的单号
+        Map<String,Object> taxMap = orderMapper.getDistinctTaxByRetaiCode(code);
+        String appKey = taxMap.get("appKey").toString();
+        String appSecret = taxMap.get("appSecret").toString();
+        String taxnum = taxMap.get("taxnum").toString();
+        String token = taxMap.get("token").toString();
+
+        // content 需要自行组装处理。
         String content = request.getParameter("");
-        String result = NuonuoTest.CommitNuonuo(content);
+
+        String result = NuonuoTest.CommitNuonuo(appKey,appSecret,taxnum,token,content);
         orderMapper.updateRetailKPBycode(code);//如果成功，备注 多个 "Y" ，并增加一个 开票成功的标志（自定义字段）
         return result;
     }
