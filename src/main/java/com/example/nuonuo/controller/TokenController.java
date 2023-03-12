@@ -29,7 +29,7 @@ public class TokenController {
     private static final Logger LOGGER = LoggerFactory.getLogger(TokenController.class);
 
     @Autowired
-    private BasicService basicService;
+    private BasicService basicService ;
 
     @Autowired
     private orderMapper orderMapper;
