@@ -41,13 +41,13 @@ public class NuonuoTest {
         String appKey = "27470641";
         String appSecret = "509A83CA7A3B4A3C";
         String method = "nuonuo.OpeMplatform.requestBillingNew"; // API方法名
-        String token = "179f29c1a92185b319a69c0ent0nsahs"; // 访问令牌 ????
+        String token = "179f29c1a92185b319a69c0rzxddwwos"; // 访问令牌 ????
 
         String content = "{\n" +
                 "  \"order\": {\n" +
                 "    \"pushMode\": \"0\",\n" +
                 "    \"invoiceType\": \"1\",\n" +
-                "    \"orderNo\": \"re-retail-test-0001\",\n" +
+                "    \"orderNo\": \"re-retail-test-0003\",\n" +
                 "    \"vehicleFlag\": \"0\",\n" +
                 "    \"buyerPhone\": \"15828574775\",\n" +
                 "    \"buyerTel\": \"15828574775\",\n" +
@@ -69,7 +69,7 @@ public class NuonuoTest {
                 "        \"taxRate\": \"0.13\",\n" +
                 "        \"unit\": \"台\",\n" +
                 "        \"price\": \"1\",\n" +
-               // "        \"goodsCode\": \"TEST001\",\n" +
+                "        \"goodsCode\": \"TEST001\",\n" +
                 "        \"goodsName\": \"华为笔记本电脑1\"\n" +
                 "      },\n" +
                 "      {\n" +
@@ -78,7 +78,7 @@ public class NuonuoTest {
                 "        \"taxRate\": \"0.13\",\n" +
                 "        \"unit\": \"台\",\n" +
                 "        \"price\": \"2\",\n" +
-                //"        \"goodsCode\": \"TEST002\",\n" +
+                "        \"goodsCode\": \"TEST002\",\n" +
                 "        \"goodsName\": \"华为笔记本电脑2\"\n" +
                 "      }\n" +
                 "    ]\n" +
