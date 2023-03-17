@@ -25,15 +25,15 @@ public class SaticScheduleTask {
     private void configureTasks() {
         System.err.println("-------------------- 执行静态定时任务开始: " + LocalDateTime.now() + "--------------------");
         try{
-            /*List<Map<String,Object>> taxList = orderMapper.getAllTaxList();
+            List<Map<String,Object>> taxList = orderMapper.getAllTaxList();
             if(taxList != null && taxList.size() !=0 ){
                 for(Map<String,Object> taxMap : taxList){
                     String appKey = taxMap.get("appKey").toString();
                     String appSecret = taxMap.get("appSecret").toString();
-                    String newToken = NuonuoTest.getToken();
+                    String newToken = NuonuoTest.getToken(appKey,appSecret);
                     orderMapper.updateTokenByAppKey(appKey,newToken);
                 }
-            }*/
+            }
         }catch (Exception e){
             e.printStackTrace();
         }

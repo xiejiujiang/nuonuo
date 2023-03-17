@@ -1,9 +1,18 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
-<html lang="en">
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" isELIgnored="false"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no">
+    <meta content="telephone=no" name="format-detection">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <script src="https://cdn.bootcss.com/socket.io/1.7.3/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+    <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
     <title>申请开票</title>
     <style>
         .form{
@@ -61,7 +70,8 @@
 <body style="background-color: #f0f0f2;margin:0;">
     <div class="form">
         <div class="progress">
-            <image src="./dui.png" class="img"></image>
+            <image src="/dui.png" class="img"></image>
+            <%--<image src="./dui.png" class="img"></image>--%>
             已提交开票申请
         </div>
         <div style="display: flex;padding:1.5em 0">
@@ -82,7 +92,7 @@
                 </div>
                 <div>
                     <div style="color:#949494" class="title">开票完成</div>
-                    <div class="tips">收到发票后，可到卡包-我的票券查看</div>
+                    <div class="tips">收到发票后，可以在填入的邮箱中进行查看！</div>
                 </div>
             </div>
         </div>
@@ -92,5 +102,9 @@
         </div>
     </div>
 </body>
-
+<script type="text/javascript">
+    function closejsp(){
+        window.close();
+    }
+</script>
 </html>

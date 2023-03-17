@@ -14,7 +14,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
     <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
-    <style>
+    <style type="text/css">
         .form{
             background-color:#fff;
             font-size: 14px;
@@ -85,34 +85,38 @@
     <div style="padding:5.125em 2.5% 0;">
         <div class="form">
             <div class="title">
-                <span class="green">订单确认></span><span>订单明细></span><span>发票抬头></span><span>发票保存</span>
+                <span class="green">订单确认></span><span>申请开票></span><span>发票保存</span>
             </div>
-            <form action="#" method="post" enctype="multipart/form-data">
+            <form action="/nuonuo/token/goCommit?code=${redetailMap.code}" method="post" enctype="multipart/form-data">
                 <div class="line">
                     <div class="left-title">店铺名称 :</div>
-                    <span>707165</span>
+                    <span>${redetailMap.storename}</span>
                 </div>
                 <div class="line">
                     <div class="left-title">交易序号 :</div>
-                    <span>66350090</span>
+                    <span>${redetailMap.code}</span>
                 </div>
                 <div class="line">
                     <div class="left-title"> 交易日期 :</div>
-                    <span>2023-02-01 09:07:48</span>
+                    <span>${redetailMap.voucherdate}</span>
                 </div>
                 <div class="line">
                     <div class="left-title"> 合计金额 :</div>
-                    <span>6.20</span><span>元</span>
+                    <span>${redetailMap.amount}</span><span>元</span>
                 </div>
                 <div style="height:2.25em"></div>
                 <div style="border-top:1px solid #e4e4e4;padding:0.625em 0 2.625em" class="flex">
-                    <input class="btn" type="submit" value="确认">
+                    <input class="btn" type="submit" value="确认" onclick="cc();">
                 </div>
             </form>
         </div>
     </div>
 </body>
-<script type="text/javascript">
 
+<script type="text/javascript">
+    function cc(){
+        //alert('走了1！');
+        //location.href="/tste";
+    }
 </script>
 </html>

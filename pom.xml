@@ -30,11 +30,11 @@
             </exclusions>
         </dependency>
 
-        <!--<dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-tomcat</artifactId>
-            &lt;!&ndash;<scope>provided</scope>&ndash;&gt;
-        </dependency>-->
+            <scope>provided</scope>
+        </dependency>
 
         <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
         <dependency>
@@ -79,10 +79,16 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
             <version>2.3.4.RELEASE</version>
+        </dependency>-->
+
+        <!-- freemarker模板引擎视图 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-freemarker</artifactId>
         </dependency>
 
         <dependency>
@@ -109,6 +115,7 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>jstl</artifactId>
+            <version>1.2</version>
         </dependency>
 
         <!-- 使用jsp引擎，springboot内置tomcat没有此依赖 -->
@@ -164,6 +171,11 @@
             <groupId>com.nuonuo</groupId>
             <artifactId>open-sdk</artifactId>
             <version>1.0.5.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
     </dependencies>
 
