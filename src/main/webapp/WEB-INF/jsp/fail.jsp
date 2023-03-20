@@ -70,8 +70,8 @@
 <body style="background-color: #f0f0f2;margin:0;">
     <div class="form">
         <div class="progress">
-            <image src="./img/dui.png" class="img"></image>
-            已提交开票申请
+            <image src="/nuonuo/img/cuo.png" class="img"></image>
+            提交失败
         </div>
         <div style="display: flex;padding:1.5em 0">
             <div style="display: flex;flex-direction: column;align-items: center;margin-right: 1em;">

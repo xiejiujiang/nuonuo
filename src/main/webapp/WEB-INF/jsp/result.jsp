@@ -70,7 +70,7 @@
 <body style="background-color: #f0f0f2;margin:0;">
     <div class="form">
         <div class="progress">
-            <image src="/dui.png" class="img"></image>
+            <image src="/nuonuo/img/dui.png" class="img"></image>
             <%--<image src="./dui.png" class="img"></image>--%>
             已提交开票申请
         </div>
