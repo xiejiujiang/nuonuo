@@ -73,12 +73,17 @@
             <div style="padding:0 0 0 1.125em;">
                 <div style="display: flex;align-items: center;padding:1.375em 0 1.25em;border-bottom: 1px solid #f4f4f4;">
                     <div class="left-title">发票类型</div>
-                    <div id="oneone" class="type flex type-noSelect" style="margin-right:0.75em" onclick="oneshow();">个人</div>
-                    <div id="comcom" class="type flex type-select" onclick="companyshow();">单位</div>
+                    <div id="oneone" class="type flex type-noSelect" style="margin-right:0.75em" onclick="oneshow();">
+                            个人
+                    </div>
+                    <div id="comcom" class="type flex type-select" onclick="companyshow();">
+                            单位
+                    </div>
                 </div>
 
                 <!-- 个人 -->
                 <div id="one1" class="line flex" style="padding:1.625em 0;display: none">
+                    <input type="hidden" name="committype" value="person">
                     <div class="left-title">抬头名称</div>
                     <div style="flex:1">
                         <input type="text" name="personname" placeholder="姓名(必填)" style="width:100%;">
@@ -95,11 +100,17 @@
 
                  <!-- 单位 -->
                 <div id="company1" class="line flex" style="padding:1.625em 0;">
+                    <input type="hidden" name="committype" value="company">
                     <div class="left-title">抬头名称</div>
                     <div style="flex:1">
                         <input type="text" name="companyname" placeholder="单位名称(必填)" style="width:100%;">
                     </div>
                     <%--<div class="green" style="margin-right: 1.875em;width:4em">选择抬头</div>--%>
+                </div>
+                <div id="company11" class="line flex">
+                    <div class="left-title">类别</div>
+                    普票<input type="radio"  value='1' name='invoicetype' style="margin-right: 30px"/>
+                    专票<input type="radio"  value='2' name='invoicetype'/>
                 </div>
                 <div id="company2" class="line flex">
                     <div class="left-title">税号</div>

@@ -79,12 +79,14 @@ public class TokenController {
         ModelAndView mav = new ModelAndView();
         LOGGER.info("-------------------  扫码后，打开的单据信息确认页面  ----------------------");
         String code = request.getParameter("code"); // 零售单的单号
-        //Map<String,Object> redetailMap = orderMapper.getRedetailMap(code);
-        Map<String,Object> redetailMap = new HashMap<String,Object>();
-        redetailMap.put("storename","世豪广场店");
-        redetailMap.put("code","RE-2022-02-09-1222233");
-        redetailMap.put("voucherdate","2022-02-09 18:18:18");
-        redetailMap.put("amount","18888");
+        Map<String,Object> redetailMap = orderMapper.getRedetailMap(code);
+
+        /*Map<String,Object> redetailMap = new HashMap<String,Object>();
+        redetailMap.put("storename","上海九亭店");
+        redetailMap.put("code","RE-LS-0322");
+        redetailMap.put("voucherdate","2023-03-22 09:32:14");
+        redetailMap.put("amount","6677.00");*/
+
         mav.addObject("redetailMap",redetailMap);
         mav.setViewName("openRecode");
         return mav;
@@ -105,57 +107,91 @@ public class TokenController {
     //提交开票信息 到  诺诺网 ， 并返回结果
     @RequestMapping(value="/commitNuonuo", method = {RequestMethod.GET,RequestMethod.POST})
     public ModelAndView getDistricntKC(HttpServletRequest request, HttpServletResponse response) throws Exception{
-        ModelAndView mav = new ModelAndView();
+        ModelAndView mav = new ModelAndView("result");
         String code = request.getParameter("code");//零售单的单号
-        LOGGER.info(" 零售单：" + code + "准备开票了！！！ "  );
+        LOGGER.info("--------------------- 零售单：" + code + "准备开票了！！！ ---------------------"  );
         mav.setViewName("result");
         if(code == null || "".equals(code) || !code.contains("LS")){ // 此单已经开过票。或者 正在开票中？
             mav.setViewName("fail");
             return  mav;
         }
-        Map<String,Object> taxMap = orderMapper.getDistinctTaxByRetaiCode(code);
-        String appKey = taxMap.get("appKey").toString();
-        String appSecret = taxMap.get("appSecret").toString();
-        String taxnum = taxMap.get("taxnum").toString();
-        String token = taxMap.get("token").toString();
+        try {
+            Map<String,Object> taxMap = orderMapper.getRedetailMap(code);
+            String appKey = taxMap.get("AppKey").toString();
+            String appSecret = taxMap.get("AppSecret").toString();
+            String taxnum = taxMap.get("taxnum").toString();
+            String token = taxMap.get("token").toString();
 
-        //页面上 用户 提交的个人  或者  公司的所有参数
-        String personname = request.getParameter("personname");
-        String personmail = request.getParameter("personname");
-        String personmobile = request.getParameter("personname");
+            List<Map<String,Object>> invenlist = orderMapper.getRetailDetailListByCode(code);
 
-        String companyname = request.getParameter("personname");
-        String companytaxnum = request.getParameter("personname");
-        String companyaddress = request.getParameter("personname");
-        String companyphone = request.getParameter("personname");
-        String companybankname = request.getParameter("personname");
-        String companybanknum = request.getParameter("personname");
-        String companymail = request.getParameter("personname");
-        String companymobile = request.getParameter("personname");
+            // -------------------- 个人 ---------------------------//
+            String personname = request.getParameter("personname");
+            String personmail = request.getParameter("personmail");
+            String personmobile = request.getParameter("personmobile");
 
-        List<Map<String,Object>> invenlist = orderMapper.getRetailDetailListByCode(code);
+            // -------------------- 公司 ----------------------------//
+            String companyname = request.getParameter("companyname");
+            String invoicetype = request.getParameter("invoicetype");//普票 1   专票 2
+            String companytaxnum = request.getParameter("companytaxnum");
+            String companyaddress = request.getParameter("companyaddress");
+            String companyphone = request.getParameter("companyphone");
+            String companybankname = request.getParameter("companybankname");
+            String companybanknum = request.getParameter("companybanknum");
+            String companymail = request.getParameter("companymail");
+            String companymobile = request.getParameter("companymobile");
 
+            // content 需要自行组装处理。
+            String content = "";
+            if(personname != null && !"".equals(personname)){
+                taxMap.put("buyname",personname);
+                taxMap.put("mail",personmail);
+                taxMap.put("buytel",personmobile);
+                content = NuonuoTest.getContentString(taxMap,invenlist);
+            }
 
-        // content 需要自行组装处理。
-        String content = "";
-
-
-
-        String result = NuonuoTest.CommitNuonuo(appKey,appSecret,taxnum,token,content);
-        JSONObject jre = JSONObject.parseObject(result);
-        if("E0000".equals(jre.getString("code"))){
-            //提交成功！（不是开票成功！）
-            String invoiceSerialNum = jre.getString("invoiceSerialNum");
-            LOGGER.info("零售单：" + code + " 的开票结果是成功，对应的开票号是：" + invoiceSerialNum);
-            //orderMapper.updateRetailKPBycode(code);//如果成功，备注 多个 "Y" ，并增加一个 开票成功的标志（自定义字段）
-            mav.setViewName("result");
-        }else{
-            //提交失败！
-            String describe = jre.getString("describe");
-            LOGGER.info("零售单：" + code + " 的开票结果是失败，对应的原因是：" + describe);
+            if(companyname != null && !"".equals(companyname)){
+                taxMap.put("buyname",companyname);
+                taxMap.put("invoicetype",invoicetype);
+                //公司 开  专票 用
+                taxMap.put("companytaxnum",companytaxnum);
+                taxMap.put("companyaddress",companyaddress);
+                taxMap.put("companyphone",companyphone);
+                taxMap.put("companybankname",companybankname);
+                taxMap.put("companybanknum",companybanknum);
+                taxMap.put("mail",companymail);
+                taxMap.put("buytel",companymobile);
+                content = NuonuoTest.getContentString(taxMap,invenlist);
+            }
+            LOGGER.info("============= code : " + code + " 对应的诺诺请求参数是：" + content);
+            String result = NuonuoTest.CommitNuonuo(appKey,appSecret,taxnum,token,content);
+            LOGGER.info("============= code : " + code + " 对应的诺诺开票返回是：" + result);
+            JSONObject jre = JSONObject.parseObject(result);
+            if("E0000".equals(jre.getString("code"))){
+                //提交成功！（不是开票成功！）
+                String invoiceSerialNum = jre.getString("invoiceSerialNum");
+                LOGGER.info("-------------------  零售单：" + code + " 的开票结果是成功，对应的发票流水号是：" + invoiceSerialNum);
+                //orderMapper.updateRetailKPBycode(code);//如果成功，备注 多个 "Y" ，并增加一个 开票成功的标志（自定义字段）
+                mav.setViewName("result");
+            }else{
+                //提交失败！
+                String describe = jre.getString("describe");
+                LOGGER.info("-------------------  零售单：" + code + " 的开票结果是失败，对应的原因是：" + describe);
+                mav.setViewName("fail");
+            }
+        }catch (Exception e){
+            e.printStackTrace();
             mav.setViewName("fail");
+            return  mav;
         }
         return  mav;
     }
 
+
+    //开票回传地址，回传发票信息地址（开票完成、开票失败）
+    @RequestMapping(value="/noticefp", method = {RequestMethod.GET,RequestMethod.POST})
+    public @ResponseBody String noticefp(HttpServletRequest request, HttpServletResponse response) {
+        LOGGER.info("------------------- 回传发票信息地址（开票完成、开票失败） -------------------");
+
+        return "";
+    }
 }

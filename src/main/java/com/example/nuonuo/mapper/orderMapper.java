@@ -11,8 +11,6 @@ import java.util.Map;
 @Repository
 public interface orderMapper {
 
-    Map<String,Object>  getDistinctTaxByRetaiCode(String code);
-
     Map<String,Object> getRedetailMap(String code);
 
     List<Map<String,Object>> getAllTaxList();
