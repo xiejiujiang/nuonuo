@@ -142,7 +142,7 @@
                 </div>
             </div>
             <div style="padding:1.875em 1.125em 0.25em 1.125em;">
-                <input class="btn" type="submit" value="申请开票">
+                <input id="sbid" class="btn" type="submit" value="申请开票" onclick="sbid();">
             </div>
         </form>
     </div>
@@ -193,6 +193,16 @@
         $("input[name='personname']").attr('value','');
         $("input[name='personmail']").attr('value','');
         $("input[name='personmobile']").attr('value','');
+    }
+
+    //提交时 判断那些 参数 不能为 空
+    function sbid(){
+        var personname = $("input[name='personname']").attr("value");
+        var personmail = $("input[name='personmail']").attr("value");
+        var persontel = $("input[name='persontel']").attr("value");
+
+
+
     }
 </script>
 </html>

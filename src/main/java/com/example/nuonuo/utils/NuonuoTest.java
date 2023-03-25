@@ -51,7 +51,7 @@ public class NuonuoTest {
         orderdetail.put("orderNo",params.get("code").toString());// 订单号（每个企业唯一）
         orderdetail.put("buyerPhone",params.get("buytel").toString());//购方手机（pushMode为1或2时，此项为必填，同时受企业资质是否必填控制）
         orderdetail.put("buyerTel",params.get("buytel").toString());//购方电话（购方地址+电话总共不超100字符；二手车销售统一发票时必填）
-        orderdetail.put("remark",params.get("memo").toString());
+        //orderdetail.put("remark",params.get("memo").toString());
 
         if(params.get("invoicetype") == null){//说明是个人开票，那就开个人的电子普票
             orderdetail.put("invoiceLine","p");
@@ -95,7 +95,7 @@ public class NuonuoTest {
         List<Map<String,Object>> invoiceDetail = new ArrayList<Map<String,Object>>();
         for(Map<String,Object> invenMap : invenlist){
             Map<String,Object> invoice = new HashMap<String,Object>();
-            invoice.put("num",invenMap.get("quanity").toString());
+            invoice.put("num",invenMap.get("quantity").toString());
             invoice.put("withTaxFlag","1");
             invoice.put("taxRate","0.13");
             invoice.put("unit",invenMap.get("unitname").toString());
@@ -111,8 +111,8 @@ public class NuonuoTest {
     }
 
     public static void main(String[] args) {
-        //getToken();
-        NNOpenSDK sdk = NNOpenSDK.getIntance();
+        getToken();
+        /*NNOpenSDK sdk = NNOpenSDK.getIntance();
         String taxnum = "91310117MA1J567H32"; // 授权企业税号  91310117MA1J567H32  睿肄博，   测试：339901999999199
         String appKey = "27470641";
         String appSecret = "509A83CA7A3B4A3C";
@@ -168,6 +168,6 @@ public class NuonuoTest {
         String url = "https://sdk.nuonuo.com/open/v1/services"; // SDK请求地址
         String senid = UUID.randomUUID().toString().replace("-", ""); // 唯一标识，32位随机码，无需修改，保持默认即可
         String result = sdk.sendPostSyncRequest(url, senid, appKey, appSecret, token, taxnum, method, content);
-        System.out.println(result);
+        System.out.println(result);*/
     }
 }

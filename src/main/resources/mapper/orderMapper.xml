@@ -4,7 +4,7 @@
 
     <select id="getRedetailMap" parameterType="java.lang.String" resultType="java.util.Map">
         select  TOP 1
-            sum(t2.taxamount) as totalAmount, max(t3.name) as storename,max(t1.code) as code,
+            Convert(decimal(18,2),sum(t2.taxamount)) as totalAmount, max(t3.name) as storename,max(t1.code) as code,
                MAX(CONVERT(varchar(100), t1.createdtime, 20)) as voucherdate,
 			   MAX(t4.AppKey) AS AppKey,max(t4.AppSecret) as AppSecret,
 			   max(t4.companytaxnum) as taxnum,max(t4.token) as token
@@ -14,9 +14,8 @@
     </select>
 
     <select id="getAllTaxList" resultType="java.util.Map">
-        select iddistinct,appKey,appSecret,token,companytaxnum
+        select iddistrict,appKey,appSecret,token,companytaxnum
         from nuonuo_code_token
-        order by id asc
     </select>
 
     <update id="updateTokenByAppKey" parameterType="java.lang.String">
@@ -24,7 +23,7 @@
     </update>
 
     <select id="getRetailDetailListByCode" parameterType="java.lang.String" resultType="java.util.Map">
-        select t3.name as goodsname,t2.quanity,t2.taxamount,t4.name as unitname,t3.priuserdefnvc1 as ssflbm
+        select t3.name as goodsname,t2.quantity,t2.taxamount,t4.name as unitname,t3.priuserdefnvc1 as ssflbm
         from re_retail t1,re_retail_b t2 ,AA_inventory t3,AA_unit t4
         where t1.id = t2.idRetailDTO and t1.code = #{code} and t2.idInventory = t3.id
         and t3.idUnit = t4.id

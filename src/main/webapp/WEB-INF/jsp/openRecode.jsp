@@ -102,7 +102,7 @@
                 </div>
                 <div class="line">
                     <div class="left-title"> 合计金额 :</div>
-                    <span>${redetailMap.amount}</span><span>元</span>
+                    <span>${redetailMap.totalAmount}</span><span>元</span>
                 </div>
                 <div style="height:2.25em"></div>
                 <div style="border-top:1px solid #e4e4e4;padding:0.625em 0 2.625em" class="flex">
