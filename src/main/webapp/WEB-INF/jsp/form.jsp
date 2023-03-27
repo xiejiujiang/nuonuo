@@ -68,7 +68,7 @@
 </head>
 <body style="background-color: #f0f0f2;margin:0;padding:1.625em 0.625em">
     <div class="form">
-        <form action="/nuonuo/token/commitNuonuo" method="post" enctype="multipart/form-data">
+        <form id="formm" action="/nuonuo/token/commitNuonuo" method="post" enctype="multipart/form-data">
             <input type="hidden" name="code" value="${code}">
             <div style="padding:0 0 0 1.125em;">
                 <div style="display: flex;align-items: center;padding:1.375em 0 1.25em;border-bottom: 1px solid #f4f4f4;">
@@ -82,8 +82,8 @@
                 </div>
 
                 <!-- 个人 -->
-                <div id="one1" class="line flex" style="padding:1.625em 0;display: none">
-                    <input type="hidden" name="committype" value="person">
+                <div id="one1" class="line flex" style="padding:1.625em 0;">
+                    <input type="hidden" name="committypeperson" value="person">
                     <div class="left-title">抬头名称</div>
                     <div style="flex:1">
                         <input type="text" name="personname" placeholder="姓名(必填)" style="width:100%;">
@@ -100,7 +100,7 @@
 
                  <!-- 单位 -->
                 <div id="company1" class="line flex" style="padding:1.625em 0;">
-                    <input type="hidden" name="committype" value="company">
+                    <input type="hidden" name="committypecompany" value="company">
                     <div class="left-title">抬头名称</div>
                     <div style="flex:1">
                         <input type="text" name="companyname" placeholder="单位名称(必填)" style="width:100%;">
@@ -109,28 +109,28 @@
                 </div>
                 <div id="company11" class="line flex">
                     <div class="left-title">类别</div>
-                    普票<input type="radio"  value='1' name='invoicetype' style="margin-right: 30px"/>
+                    普票<input type="radio"  value='1' name='invoicetype' style="margin-right: 30px" checked="true"/>
                     专票<input type="radio"  value='2' name='invoicetype'/>
                 </div>
                 <div id="company2" class="line flex">
                     <div class="left-title">税号</div>
-                    <input type="number" name="companytaxnum" placeholder="15-20位(必填)">
+                    <input type="number" name="companytaxnum" placeholder="15-20位">
                 </div>
                 <div id="company3" class="line flex">
                     <div class="left-title">单位地址</div>
-                    <input type="text" name="companyaddress" placeholder="单位地址信息 (必填)">
+                    <input type="text" name="companyaddress" placeholder="单位地址信息">
                 </div>
                 <div id="company4" class="line flex">
                     <div class="left-title">电话号码</div>
-                    <input type="number" name="companyphone" placeholder="电话号码(必填)">
+                    <input type="number" name="companyphone" placeholder="电话号码">
                 </div>
                 <div id="company5" class="line flex">
                     <div class="left-title">开户银行</div>
-                    <input type="text" name="companybankname" placeholder="开户银行名称(必填)">
+                    <input type="text" name="companybankname" placeholder="开户银行名称">
                 </div>
                 <div id="company6" class="line flex">
                     <div class="left-title">银行账号</div>
-                    <input type="number" name="companybanknum" placeholder="银行账号号码 (必填)">
+                    <input type="number" name="companybanknum" placeholder="银行账号号码">
                 </div>
                 <div id="company7" class="line flex">
                     <div class="left-title">邮箱</div>
@@ -138,11 +138,11 @@
                 </div>
                 <div id="company8" class="line flex">
                     <div class="left-title">手机号</div>
-                    <input type="number" name="companymobile" placeholder="(必填)">
+                    <input type="number" name="companymobile" placeholder="">
                 </div>
             </div>
             <div style="padding:1.875em 1.125em 0.25em 1.125em;">
-                <input id="sbid" class="btn" type="submit" value="申请开票" onclick="sbid();">
+                <input class="btn" type="submit" value="申请开票" onclick="return sbid()">
             </div>
         </form>
     </div>
@@ -156,6 +156,7 @@
         $("#one1").show();
         $("#one2").show();
         $("#one3").show();
+        $("input[name='committypeperson']").attr('value','person');
         $("#company1").hide();
         $("#company2").hide();
         $("#company3").hide();
@@ -164,6 +165,7 @@
         $("#company6").hide();
         $("#company7").hide();
         $("#company8").hide();
+        $("#company11").hide();
         $("input[name='companyname']").attr('value','');
         $("input[name='companytaxnum']").attr('value','');
         $("input[name='companyaddress']").attr('value','');
@@ -172,6 +174,7 @@
         $("input[name='companybanknum']").attr('value','');
         $("input[name='companymail']").attr('value','');
         $("input[name='companymobile']").attr('value','');
+        $("input[name='committypecompany']").attr('value','');
     }
 
     function companyshow(){
@@ -190,19 +193,64 @@
         $("#company6").show();
         $("#company7").show();
         $("#company8").show();
+        $("#company11").show();
+        $("input[name='committypecompany']").attr('value','company');
         $("input[name='personname']").attr('value','');
         $("input[name='personmail']").attr('value','');
         $("input[name='personmobile']").attr('value','');
+        $("input[name='committypeperson']").attr('value','');
     }
+
+
+    //默认 打开 个人！
+    $(function (){
+        oneshow();
+    });
+
 
     //提交时 判断那些 参数 不能为 空
     function sbid(){
-        var personname = $("input[name='personname']").attr("value");
-        var personmail = $("input[name='personmail']").attr("value");
-        var persontel = $("input[name='persontel']").attr("value");
-
-
-
+        var emailReg = /^\w{3,}(\.\w+)*@[A-z0-9]+(\.[A-z]{2,5}){1,2}$/;
+        var one1displayvalue = $("#oneone").attr('style');
+        //222 就是没选中
+        if(one1displayvalue.indexOf('222') != -1) {
+            var invoicetype = $("input[name='invoicetype']:checked").attr('value');
+            // 1普
+            if(invoicetype == '1' || invoicetype == 1){
+                //公司普票。只要 名称 + 邮箱
+                var companyname = $("input[name='companyname']").attr('value').trim();
+                var companymail = $("input[name='companymail']").attr('value').trim();
+                if(companyname == '' || companymail == '' || !emailReg.test(companymail)){
+                    alert('公司普票，需要填写名称和正确的邮箱！');
+                    return false;
+                }
+            }else{
+                //2专 , 公司专票，必须要 全填
+                var companyname = $("input[name='companyname']").attr('value').trim();
+                var companymail = $("input[name='companymail']").attr('value').trim();
+                var companytaxnum = $("input[name='companytaxnum']").attr('value').trim();
+                var companyaddress = $("input[name='companyaddress']").attr('value').trim();
+                var companyphone = $("input[name='companyphone']").attr('value').trim();
+                var companybankname = $("input[name='companybankname']").attr('value').trim();
+                var companybanknum = $("input[name='companybanknum']").attr('value').trim();
+                var companymobile = $("input[name='companymobile']").attr('value').trim();
+                if(companyname == '' || companymail == '' || !emailReg.test(companymail)
+                    || companytaxnum == '' || companyaddress == '' || companyphone == '' || companybankname == ''
+                    || companybanknum == '' || companymobile == ''){
+                    alert('公司专票，需要全部填写正确！');
+                    return false;
+                }
+            }
+        }else{
+            alert('个人普票2 ');
+            var personname = $("input[name='personname']").attr('value').trim();
+            var personmail = $("input[name='personmail']").attr('value').trim();
+            if(personname == '' || personmail == '' || !emailReg.test(personmail)){
+                alert('个人普票，需要填写名称和正确的邮箱！');
+                return false;
+            }
+        }
+        return false;
     }
 </script>
 </html>

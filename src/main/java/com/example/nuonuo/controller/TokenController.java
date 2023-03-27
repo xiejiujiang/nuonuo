@@ -108,6 +108,9 @@ public class TokenController {
     @RequestMapping(value="/commitNuonuo", method = {RequestMethod.GET,RequestMethod.POST})
     public ModelAndView getDistricntKC(HttpServletRequest request, HttpServletResponse response) throws Exception{
         ModelAndView mav = new ModelAndView("result");
+        //谁有值，页面上就选择的谁
+        String committypeperson = request.getParameter("committypeperson");
+        String committypecompany = request.getParameter("committypecompany");
         String code = request.getParameter("code");//零售单的单号
         LOGGER.info("--------------------- 零售单：" + code + "准备开票了！！！ ---------------------"  );
         mav.setViewName("result");
@@ -142,17 +145,17 @@ public class TokenController {
 
             // content 需要自行组装处理。
             String content = "";
-            if(personname != null && !"".equals(personname)){
+            if(committypeperson != null && !"".equals(committypeperson)){
                 taxMap.put("buyname",personname);
                 taxMap.put("mail",personmail);
                 taxMap.put("buytel",personmobile);
                 content = NuonuoTest.getContentString(taxMap,invenlist);
             }
 
-            if(companyname != null && !"".equals(companyname)){
+            if(committypecompany != null && !"".equals(committypecompany)){
                 taxMap.put("buyname",companyname);
-                taxMap.put("invoicetype",invoicetype);
-                //公司 开  专票 用
+                taxMap.put("invoicetype",invoicetype);// 1普，2专
+                //公司 开  专票 用    ？   那开 公司 普票呢？
                 taxMap.put("companytaxnum",companytaxnum);
                 taxMap.put("companyaddress",companyaddress);
                 taxMap.put("companyphone",companyphone);
