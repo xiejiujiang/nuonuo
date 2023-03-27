@@ -242,7 +242,6 @@
                 }
             }
         }else{
-            alert('个人普票2 ');
             var personname = $("input[name='personname']").attr('value').trim();
             var personmail = $("input[name='personmail']").attr('value').trim();
             if(personname == '' || personmail == '' || !emailReg.test(personmail)){
@@ -250,7 +249,7 @@
                 return false;
             }
         }
-        return false;
+        return true;
     }
 </script>
 </html>
