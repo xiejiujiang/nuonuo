@@ -21,7 +21,7 @@ public class SaticScheduleTask {
     private orderMapper orderMapper;
 
     //每天上午6点，下午6点
-    @Scheduled(cron = "0 0 6,18 * * ?")
+    @Scheduled(cron = "0 0 23 * * ?")
     private void configureTasks() {
         System.err.println("-------------------- 执行静态定时任务开始: " + LocalDateTime.now() + "--------------------");
         try{
