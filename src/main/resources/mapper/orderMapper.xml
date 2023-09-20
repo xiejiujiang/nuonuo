@@ -2,6 +2,19 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.example.nuonuo.mapper.orderMapper">
 
+    <select id="getDBAllOrgList" resultType="java.util.Map">
+        select id_num,code,AppKey,AppSecret,access_token,refresh_token,user_id,org_id,app_name,update_time from XXX_code_token
+    </select>
+
+    <update id="updateOrgToken" parameterType="java.util.Map">
+        update XXX_code_token
+        set access_token = #{access_token},
+        refresh_token = #{refresh_token},
+        update_time = GETDATE(),
+        etoken = #{etoken}
+        where org_id = #{org_id}
+    </update>
+
     <select id="getRedetailMap" parameterType="java.lang.String" resultType="java.util.Map">
         select  TOP 1
             Convert(decimal(18,2),sum(t2.taxamount)) as totalAmount, max(t3.name) as storename,max(t1.code) as code,
@@ -27,5 +40,10 @@
         from re_retail t1,re_retail_b t2 ,AA_inventory t3,AA_unit t4
         where t1.id = t2.idRetailDTO and t1.code = #{code} and t2.idInventory = t3.id
         and t3.idUnit = t4.id
+    </select>
+
+
+    <select id="getTokenByAppKey" parameterType="java.lang.String" resultType="java.lang.String">
+        select access_token from XXX_code_token where AppKey = #{AppKey}
     </select>
 </mapper>

@@ -1,7 +1,11 @@
 package com.example.nuonuo.utils;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.example.nuonuo.entity.Ekanya.Esale.ESaleRoot;
+import com.example.nuonuo.entity.Ekanya.Euser.Euser;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
 import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
 import org.apache.http.client.config.RequestConfig;
@@ -21,14 +25,57 @@ import org.apache.http.util.EntityUtils;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class HttpClient {
 
     public final static String openurl = "https://openapi.chanjet.com";
 
+    public final static String EAuthorization = "bearer WNrAbg29qqr7f_wx-gl8fAJ0M5VSSOs8cm_jMf-Ix3TIz0h7IbyM7tDAY_SqU5xDlCjYOt_wBzMDRiLQapgSpQMwzFfjQ8UoIvMfFCGfDWjNgbyakNKE_dpipEZtfgoCp8Ap_O_LjuE1jEzqySYhxJB7w3fUpLispfU0b1rpENY_qkvbjSvOBCt1W135bgBixX9ylTRBhnQRTpldn0-Yrptdvn86Jp8U4sc-9lRzzHVvXFkNrUUPQq-_bYtPnET6RYX2JW6OosLcqSfLCvprsye9lxzF-5KazTAR_8sUbayXVqUVjljU9XUCEP__eHDM81hn9Xw4w1nx7TI46ZMbg4AYxSW-03GDVArievMaM1A.eyJ0aWQiOiIwMjcxNTZiYy1iOGNmLTRkNzItYmFjNC0wZDcyMGQ4ZmIwNDkifQ==";
+
+    public static void main(String[] args) throws Exception{
+        /*Map<String,String> params = new HashMap<String,String>();
+        params.put("ticket","z7sctvS7Nd%2bP7iE4x0DU34trNfgZ0fXr8XLu6QiUmtN5cYbpnzvaJCNeuI2NAmza3%2bI4Z6bO5y7TVSZDl5zwljOeUr6G8mX%2fFrRHZso%2fRyhnXAtC6KsQxt88GSTJFPkVsIyyTBW8EBdK0kIPSfejOwt4PzwwHxusz9QDnfiPOALiTAMeq3OHpiYrtukGs7pmyLpcU6cPUeO%2bLheHvdl1Hv60enF2kPkdLsh7IE4tMSvlu7TGiC7eJx2f10ciEcvIAZatQxibMH0ViUDC5tuqkPa0E207p62yE7mrqcKieAaVGQMKxvRw5A6f2ULjg9at28NmfuBqvhhJYPRR8M3z%2fmzzRBLD0y%2b1XTyjutkLaJVcmmnH2tapl34kdscuw8adhTEJp%2fiHzOY4RQME0YFOQ2hqOAcgRrLh14N16dYODVQXs3aghnO173NulihX6R3m");
+        params.put("tenantId","027156bc-b8cf-4d72-bac4-0d720d8fb049");
+
+        Ekanya ekanya = new Ekanya("z7sctvS7Nd%2bP7iE4x0DU34trNfgZ0fXr8XLu6QiUmtN5cYbpnzvaJCNeuI2NAmza3%2bI4Z6bO5y7TVSZDl5zwljOeUr6G8mX%2fFrRHZso%2fRyhnXAtC6KsQxt88GSTJFPkVsIyyTBW8EBdK0kIPSfejOwt4PzwwHxusz9QDnfiPOALiTAMeq3OHpiYrtukGs7pmyLpcU6cPUeO%2bLheHvdl1Hv60enF2kPkdLsh7IE4tMSvlu7TGiC7eJx2f10ciEcvIAZatQxibMH0ViUDC5tuqkPa0E207p62yE7mrqcKieAaVGQMKxvRw5A6f2ULjg9at28NmfuBqvhhJYPRR8M3z%2fmzzRBLD0y%2b1XTyjutkLaJVcmmnH2tapl34kdscuw8adhTEJp%2fiHzOY4RQME0YFOQ2hqOAcgRrLh14N16dYODVQXs3aghnO173NulihX6R3m","027156bc-b8cf-4d72-bac4-0d720d8fb049");
+        String result = doPostTestTwo("https://openapi-gw.linkedcare.cn/public/v1/auth/token",ekanya);
+        System.out.println("result == " + result);*/
+
+
+        /*Map<String,String> parma = new HashMap<String,String>();
+        parma.put("officeId","138");
+        String Authorization = "bearer WNrAbg29qqr7f_wx-gl8fAJ0M5VSSOs8cm_jMf-Ix3TIz0h7IbyM7tDAY_SqU5xDlCjYOt_wBzMDRiLQapgSpQMwzFfjQ8UoIvMfFCGfDWjNgbyakNKE_dpipEZtfgoCp8Ap_O_LjuE1jEzqySYhxJB7w3fUpLispfU0b1rpENY_qkvbjSvOBCt1W135bgBixX9ylTRBhnQRTpldn0-Yrptdvn86Jp8U4sc-9lRzzHVvXFkNrUUPQq-_bYtPnET6RYX2JW6OosLcqSfLCvprsye9lxzF-5KazTAR_8sUbayXVqUVjljU9XUCEP__eHDM81hn9Xw4w1nx7TI46ZMbg4AYxSW-03GDVArievMaM1A.eyJ0aWQiOiIwMjcxNTZiYy1iOGNmLTRkNzItYmFjNC0wZDcyMGQ4ZmIwNDkifQ==";
+        //public/v2/billing/payment-method-config/by-office
+        String s1 = HttpClient.doGeturlparams("https://openapi-gw.linkedcare.cn/public/v2/billing/payment-method-config/by-office", parma,Authorization);
+        System.out.println("s1 == " + s1);*/
+
+
+        /*Map<String,String> parma = new HashMap<String,String>();
+        parma.put("officeId","125"); // 138  104  125
+        //String today = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        parma.put("startTime","2023-09-10");//当日
+        parma.put("endTime","2023-09-10");//当日
+        String Authorization = HttpClient.EAuthorization;
+        String result = HttpClient.doGeturlparams("https://openapi-gw.linkedcare.cn/public/v2/crm/patient/query/window", parma,Authorization);
+        System.out.println("result == " + result);
+
+        //将这个json字符串转换成java对象，方便进行数据 处理！
+        Euser euser = JSON.parseObject(result, Euser.class);*/
+
+
+        Map<String,String> parma = new HashMap<String,String>();
+        String today = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        parma.put("startTime","2023-09-01");//当日
+        parma.put("endTime","2023-09-11");//当日
+        parma.put("officeId","104"); // 138 125  104
+        String Authorization = HttpClient.EAuthorization;
+        String result = HttpClient.doGeturlparams("https://openapi-gw.linkedcare.cn/public/v2/billing/bill-deduction/flow", parma,Authorization);
+        System.out.println("res == " + result);
+        ESaleRoot eSaleRoot = JSON.parseObject(result, ESaleRoot.class);//还是接受到某个对象里面
+
+    }
 
     /**
      * GET---无参测试
@@ -76,9 +123,10 @@ public class HttpClient {
      *
      * @date
      */
-    public static String doGeturlparams(String url, Map<String,String> params) throws  Exception{
+    public static String doGeturlparams(String url, Map<String,String> params,String Authorization) throws  Exception{
         // 获得Http客户端(可以理解为:你得先有一个浏览器;注意:实际上HttpClient与浏览器是不一样的)
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+
         CloseableHttpResponse response = null;
         String result = "";
         try {
@@ -90,9 +138,10 @@ public class HttpClient {
             }
             String paramsstr = ss.substring(0,ss.length()-1);
             // 创建Get请求
-            System.out.println("请求地址是： "+ url + "?" + paramsstr );
+            //System.out.println("请求地址是： "+ url + "?" + paramsstr );
             HttpGet httpGet = new HttpGet(url + "?" + paramsstr);
             // 配置信息
+
             RequestConfig requestConfig = RequestConfig.custom()
                     // 设置连接超时时间(单位毫秒)
                     .setConnectTimeout(50000)
@@ -100,11 +149,15 @@ public class HttpClient {
                     .setConnectionRequestTimeout(50000)
                     // socket读写超时时间(单位毫秒)
                     .setSocketTimeout(50000)
+
                     // 设置是否允许重定向(默认为true)
                     .setRedirectsEnabled(true).build();
 
             // 将上面的配置信息 运用到这个Get请求里
             httpGet.setConfig(requestConfig);
+            if(Authorization != null && !"".equals(Authorization) && !"null".equals(Authorization)){
+                httpGet.setHeader("Authorization", Authorization);
+            }
 
             // 由客户端执行(发送)Get请求
             response = httpClient.execute(httpGet);
@@ -113,9 +166,9 @@ public class HttpClient {
             HttpEntity responseEntity = response.getEntity();
             System.out.println("响应状态为:" + response.getStatusLine());
             if (responseEntity != null) {
-                System.out.println("响应内容长度为:" + responseEntity.getContentLength());
+                //System.out.println("响应内容长度为:" + responseEntity.getContentLength());
                 result = EntityUtils.toString(responseEntity);
-                System.out.println("响应内容为:" + result);
+                //System.out.println("响应内容为:" + result);
             }
         } catch (ParseException | IOException e) {
             e.printStackTrace();
@@ -136,7 +189,6 @@ public class HttpClient {
      *
      * @date
      */
-
     public void doGetTestWayTwo() {
         // 获得Http客户端(可以理解为:你得先有一个浏览器;注意:实际上HttpClient与浏览器是不一样的)
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
@@ -208,13 +260,13 @@ public class HttpClient {
      *
      * @date
      */
-    public void doPostTestOne() {
+    public void doPostTestOne(String url) {
 
         // 获得Http客户端(可以理解为:你得先有一个浏览器;注意:实际上HttpClient与浏览器是不一样的)
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
 
         // 创建Post请求
-        HttpPost httpPost = new HttpPost("http://localhost:12345/doPostControllerOne");
+        HttpPost httpPost = new HttpPost(url);
         // 响应模型
         CloseableHttpResponse response = null;
         try {
@@ -305,19 +357,14 @@ public class HttpClient {
      *
      * @date
      */
-    public void doPostTestTwo() {
-
+    public static String doPostTestTwo(String url, Ekanya ekanya) {
+        String reslut = "";
         // 获得Http客户端(可以理解为:你得先有一个浏览器;注意:实际上HttpClient与浏览器是不一样的)
-        /*CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+        CloseableHttpClient httpClient = HttpClientBuilder.create().build();
         // 创建Post请求
-        HttpPost httpPost = new HttpPost("http://localhost:12345/doPostControllerTwo");
-        User user = new User();
-        user.setName("潘晓婷");
-        user.setAge(18);
-        user.setGender("女");
-        user.setMotto("姿势要优雅~");
+        HttpPost httpPost = new HttpPost(url);
         // 我这里利用阿里的fastjson，将Object转换为json字符串;(需要导入com.alibaba.fastjson.JSON包)
-        String jsonString = JSON.toJSONString(user);
+        String jsonString = JSON.toJSONString(ekanya);
         StringEntity entity = new StringEntity(jsonString, "UTF-8");
         // post请求是将参数放在请求体里面传过去的;这里将entity放入post请求体中
         httpPost.setEntity(entity);
@@ -332,11 +379,13 @@ public class HttpClient {
             HttpEntity responseEntity = response.getEntity();
             System.out.println("响应状态为:" + response.getStatusLine());
             if (responseEntity != null) {
-                System.out.println("响应内容长度为:" + responseEntity.getContentLength());
-                System.out.println("响应内容为:" + EntityUtils.toString(responseEntity));
+                //System.out.println("响应内容长度为:" + responseEntity.getContentLength());
+                return EntityUtils.toString(responseEntity);
+                //System.out.println("响应内容为:" + EntityUtils.toString(responseEntity));
             }
         } catch (ParseException | IOException e) {
             e.printStackTrace();
+            return "error!!!!";
         } finally {
             try {
                 // 释放资源
@@ -349,7 +398,8 @@ public class HttpClient {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }*/
+            return  reslut;
+        }
     }
 
 
