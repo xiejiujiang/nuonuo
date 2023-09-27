@@ -27,4 +27,12 @@ public interface orderMapper {
 
     //根据appkey 获取 当前的 token
     public String getTokenByAppKey(@Param("AppKey") String AppKey);
+
+    //订单订单编号 查询 此销售订单对应的商品明细，以及表头上的
+    List<Map<String,Object>> getTSaListByCode(String Tsacode);
+
+    //订单订单编号 查询 此生产加工单对应的商品明细，以及表头上的
+    List<Map<String,Object>> getTscListByCode(String Tsccode);
+
+    Map<String,Object>  getTdeparmtClerkByMobile(String mobile);
 }

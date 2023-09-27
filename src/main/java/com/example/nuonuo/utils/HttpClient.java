@@ -32,7 +32,7 @@ public class HttpClient {
 
     public final static String openurl = "https://openapi.chanjet.com";
 
-    public final static String EAuthorization = "bearer WNrAbg29qqr7f_wx-gl8fAJ0M5VSSOs8cm_jMf-Ix3TIz0h7IbyM7tDAY_SqU5xDlCjYOt_wBzMDRiLQapgSpQMwzFfjQ8UoIvMfFCGfDWjNgbyakNKE_dpipEZtfgoCp8Ap_O_LjuE1jEzqySYhxJB7w3fUpLispfU0b1rpENY_qkvbjSvOBCt1W135bgBixX9ylTRBhnQRTpldn0-Yrptdvn86Jp8U4sc-9lRzzHVvXFkNrUUPQq-_bYtPnET6RYX2JW6OosLcqSfLCvprsye9lxzF-5KazTAR_8sUbayXVqUVjljU9XUCEP__eHDM81hn9Xw4w1nx7TI46ZMbg4AYxSW-03GDVArievMaM1A.eyJ0aWQiOiIwMjcxNTZiYy1iOGNmLTRkNzItYmFjNC0wZDcyMGQ4ZmIwNDkifQ==";
+    public final static String EAuthorization = "bearer olU7AgMZPg5N8g-GEvXeaTIOW6NEtejH5guFFRRF7KCr6Kl1n7aswvJY77-xGmT8zEzKymmwEwOuPt70bdZqZKm4oFjoSdJvCSJ08DYtD2pLXAonRa77bCefPK0rsaFQuDhQ5IBcnFXQOhcEB-v0Zjb4tnS76CfJVpXa1gsoEL2wZ6yM50mCKPKg5Zsho3_JZp2KGFnR-RhS6DaG2YpqvX4x0E_qZdD3n_bRjq3HiDnjbqwQLLNonlEph4P1boKNmiNNcn_GasYsE02uoZXd9UCUQnvWNxcS_Qf53QNpSzDRvf4nkpOb2IZGostqUV0sHZiacslKKnJhvK6y6hZUKFXjGl8fC1qgxabPBRR-aq0.eyJ0aWQiOiIwMjcxNTZiYy1iOGNmLTRkNzItYmFjNC0wZDcyMGQ4ZmIwNDkifQ==";
 
     public static void main(String[] args) throws Exception{
         /*Map<String,String> params = new HashMap<String,String>();
@@ -41,7 +41,11 @@ public class HttpClient {
 
         Ekanya ekanya = new Ekanya("z7sctvS7Nd%2bP7iE4x0DU34trNfgZ0fXr8XLu6QiUmtN5cYbpnzvaJCNeuI2NAmza3%2bI4Z6bO5y7TVSZDl5zwljOeUr6G8mX%2fFrRHZso%2fRyhnXAtC6KsQxt88GSTJFPkVsIyyTBW8EBdK0kIPSfejOwt4PzwwHxusz9QDnfiPOALiTAMeq3OHpiYrtukGs7pmyLpcU6cPUeO%2bLheHvdl1Hv60enF2kPkdLsh7IE4tMSvlu7TGiC7eJx2f10ciEcvIAZatQxibMH0ViUDC5tuqkPa0E207p62yE7mrqcKieAaVGQMKxvRw5A6f2ULjg9at28NmfuBqvhhJYPRR8M3z%2fmzzRBLD0y%2b1XTyjutkLaJVcmmnH2tapl34kdscuw8adhTEJp%2fiHzOY4RQME0YFOQ2hqOAcgRrLh14N16dYODVQXs3aghnO173NulihX6R3m","027156bc-b8cf-4d72-bac4-0d720d8fb049");
         String result = doPostTestTwo("https://openapi-gw.linkedcare.cn/public/v1/auth/token",ekanya);
-        System.out.println("result == " + result);*/
+        System.out.println("result == " + result);
+        JSONObject job = JSONObject.parseObject(result);
+        System.out.println("token == " + job.get("token").toString());*/
+
+
 
 
         /*Map<String,String> parma = new HashMap<String,String>();
@@ -65,7 +69,7 @@ public class HttpClient {
         Euser euser = JSON.parseObject(result, Euser.class);*/
 
 
-        Map<String,String> parma = new HashMap<String,String>();
+        /*Map<String,String> parma = new HashMap<String,String>();
         String today = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
         parma.put("startTime","2023-09-01");//当日
         parma.put("endTime","2023-09-11");//当日
@@ -73,7 +77,15 @@ public class HttpClient {
         String Authorization = HttpClient.EAuthorization;
         String result = HttpClient.doGeturlparams("https://openapi-gw.linkedcare.cn/public/v2/billing/bill-deduction/flow", parma,Authorization);
         System.out.println("res == " + result);
-        ESaleRoot eSaleRoot = JSON.parseObject(result, ESaleRoot.class);//还是接受到某个对象里面
+        ESaleRoot eSaleRoot = JSON.parseObject(result, ESaleRoot.class);*/
+
+
+        //查询 E看牙 员工档案信息
+        Map<String,String> parma = new HashMap<String,String>();
+        parma.put("providerId","10"); // 138 125  104
+        String Authorization = HttpClient.EAuthorization;
+        String result = HttpClient.doGeturlparams("https://openapi-gw.linkedcare.cn/public/v2/pms/provider/query/by-id", parma,Authorization);
+        System.out.println("res == " + result);
 
     }
 
@@ -358,7 +370,7 @@ public class HttpClient {
      * @date
      */
     public static String doPostTestTwo(String url, Ekanya ekanya) {
-        String reslut = "";
+        String reslut = "不应该返回这个哦！";
         // 获得Http客户端(可以理解为:你得先有一个浏览器;注意:实际上HttpClient与浏览器是不一样的)
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
         // 创建Post请求
@@ -380,8 +392,9 @@ public class HttpClient {
             System.out.println("响应状态为:" + response.getStatusLine());
             if (responseEntity != null) {
                 //System.out.println("响应内容长度为:" + responseEntity.getContentLength());
-                return EntityUtils.toString(responseEntity);
+                reslut = EntityUtils.toString(responseEntity);
                 //System.out.println("响应内容为:" + EntityUtils.toString(responseEntity));
+                return reslut;
             }
         } catch (ParseException | IOException e) {
             e.printStackTrace();
