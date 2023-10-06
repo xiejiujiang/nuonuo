@@ -88,7 +88,7 @@ public class BasicServiceImpl implements BasicService {
 
     //-------------------------------------------------------------------------------------------//
 
-    //E看牙接口，查询4-2划扣流水。生成T+销售订单。 但是，我觉得 应该 是 先调用 查询患者的账单
+    //E看牙接口，查询4-2划扣流水。生成T+销售订单。
     @Override
     public ESaleRoot getEplanDetail(String officeId){
         try {

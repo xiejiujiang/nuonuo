@@ -11,11 +11,15 @@ import java.util.Map;
 @Repository
 public interface orderMapper {
 
+    String getDBtest();
+
     //返回数据库中 XXX_code_token 所有记录的 企业信息
     List<Map<String,String>> getDBAllOrgList();
 
     //调用refreshtoken 后更新数据库
     void updateOrgToken(Map<String,String> updateMap);
+
+    void updateEOrgToken(Map<String,String> updateMap);
 
     Map<String,Object> getRedetailMap(String code);
 

@@ -45,9 +45,6 @@ public class HttpClient {
         JSONObject job = JSONObject.parseObject(result);
         System.out.println("token == " + job.get("token").toString());*/
 
-
-
-
         /*Map<String,String> parma = new HashMap<String,String>();
         parma.put("officeId","138");
         String Authorization = "bearer WNrAbg29qqr7f_wx-gl8fAJ0M5VSSOs8cm_jMf-Ix3TIz0h7IbyM7tDAY_SqU5xDlCjYOt_wBzMDRiLQapgSpQMwzFfjQ8UoIvMfFCGfDWjNgbyakNKE_dpipEZtfgoCp8Ap_O_LjuE1jEzqySYhxJB7w3fUpLispfU0b1rpENY_qkvbjSvOBCt1W135bgBixX9ylTRBhnQRTpldn0-Yrptdvn86Jp8U4sc-9lRzzHVvXFkNrUUPQq-_bYtPnET6RYX2JW6OosLcqSfLCvprsye9lxzF-5KazTAR_8sUbayXVqUVjljU9XUCEP__eHDM81hn9Xw4w1nx7TI46ZMbg4AYxSW-03GDVArievMaM1A.eyJ0aWQiOiIwMjcxNTZiYy1iOGNmLTRkNzItYmFjNC0wZDcyMGQ4ZmIwNDkifQ==";
@@ -81,11 +78,11 @@ public class HttpClient {
 
 
         //查询 E看牙 员工档案信息
-        Map<String,String> parma = new HashMap<String,String>();
+        /*Map<String,String> parma = new HashMap<String,String>();
         parma.put("providerId","10"); // 138 125  104
         String Authorization = HttpClient.EAuthorization;
         String result = HttpClient.doGeturlparams("https://openapi-gw.linkedcare.cn/public/v2/pms/provider/query/by-id", parma,Authorization);
-        System.out.println("res == " + result);
+        System.out.println("res == " + result);*/
 
     }
 

@@ -98,9 +98,9 @@ public class TokenServiceImpl implements TokenService {
             if(jso.get("error") == null || "null".equals(jso.get("error").toString())){//调用成功，更新数据库！
                 String etoken = jso.get("token").toString();
                 Map<String,String> ekanyaMap = new HashMap<String,String>();
-                ekanyaMap.put("tenantid","");//对应是哪个账套的，E看牙也是一个账套对应一个机构（诊所/医院）
-                ekanyaMap.put("etoken",etoken);
-                orderMapper.updateOrgToken(ekanyaMap);
+                ekanyaMap.put("tenantid","027156bc-b8cf-4d72-bac4-0d720d8fb049");//对应是哪个账套的，E看牙也是一个账套对应一个机构（诊所/医院）
+                ekanyaMap.put("token",etoken);
+                orderMapper.updateEOrgToken(ekanyaMap);
             }else{
                 LOGGER.error("----------------E看牙token更新失败，检擦！！！---------------------- ");
             }

@@ -255,8 +255,8 @@ public class MapToJson {
         List<Map<String,Object>> list = new ArrayList<>();
         for(Data data : euser.getData()){
             Map<String,Object> mm = new HashMap<>();
-            mm.put("Code",data.getFreeField().getId() );
-            mm.put("Name",data.getName());
+            mm.put("Code",data.getPrivateId());//病历号
+            mm.put("Name",data.getName());//姓名
             mm.put("PartnerType",new HashMap<String,Object>().put("code","01"));
             mm.put("PartnerClass",new HashMap<String,Object>().put("code","0101"));//个人客户
             Map<String,Object> PartnerAddresDTOs = new HashMap<>();
@@ -288,22 +288,6 @@ public class MapToJson {
 
     //创建销售订单的 请求参数 body 的 模板
     public static List<String> getSAOrderparamsJson(Map<String,Object> mm, Map<String,Object> edatamap,Map<String,Object> docMap){
-        /*Map<String,Object> edatamap = new HashMap<String,Object>();
-        for(ESaleData esaledata: eSaleRoot.getData()){
-            String patientId = ""+esaledata.getPatientId();//患者ID
-            if(edatamap.get(patientId) == null){
-                //不存在，说明第一次出现，就先存入
-                List<ESaleData> esalelist = new ArrayList<ESaleData>();
-                esalelist.add(esaledata);
-                edatamap.put(patientId,esalelist);
-            }else {
-                //已经存在，需要判断，组合 后，再存入。
-                List<ESaleData> esalelist = (List<ESaleData>) edatamap.get(patientId);
-                esalelist.add(esaledata);
-                edatamap.put(patientId,esalelist);//再放回去
-            }
-        }*/
-
         List<String> jsonList = new ArrayList<String>();
         //最后 迭代这个 edatamap，每一个客户（患者），生成一个 销售订单的JSON。所以返回的也应该是一个JSON List
         while (edatamap.keySet().iterator().hasNext()){

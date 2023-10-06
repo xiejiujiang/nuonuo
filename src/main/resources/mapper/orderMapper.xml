@@ -2,6 +2,10 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.example.nuonuo.mapper.orderMapper">
 
+    <select id="getDBtest" resultType="java.lang.String">
+        select token from XXX_Ecode_token
+    </select>
+
     <select id="getDBAllOrgList" resultType="java.util.Map">
         select id_num,code,AppKey,AppSecret,access_token,refresh_token,user_id,org_id,app_name,update_time from XXX_code_token
     </select>
@@ -13,6 +17,13 @@
         update_time = GETDATE(),
         etoken = #{etoken}
         where org_id = #{org_id}
+    </update>
+
+
+    <update id="updateEOrgToken" parameterType="java.util.Map">
+        update XXX_Ecode_token
+        set token = #{token}
+        where tenantid = #{tenantid}
     </update>
 
     <select id="getRedetailMap" parameterType="java.lang.String" resultType="java.util.Map">
