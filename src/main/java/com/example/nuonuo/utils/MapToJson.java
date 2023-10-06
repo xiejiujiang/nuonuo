@@ -15,6 +15,19 @@ import java.util.*;
 @lombok.Data
 public class MapToJson {
 
+    public static void main(String[] args) throws Exception{
+        Calendar now = Calendar.getInstance();
+        Calendar birthday = Calendar.getInstance();
+
+        String s = "1989-09-16T00:00:00";
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date dd = sdf.parse(s);
+        birthday.setTime(dd);
+
+        int age = now.get(Calendar.YEAR) - birthday.get(Calendar.YEAR);
+        System.out.println("age == " + age);
+    }
+
     @Autowired
     private BasicService basicService;
 
@@ -250,40 +263,64 @@ public class MapToJson {
     }
 
     //创建 客户档案
-    public static String getInComeString(Euser euser){
-        Map<String,Object> mapstr = new HashMap<String,Object>();
-        List<Map<String,Object>> list = new ArrayList<>();
+    public static List<String> getInComeString(Euser euser){
+        List<String> list = new ArrayList<>();
         for(Data data : euser.getData()){
+            Map<String,Object> mapstr = new HashMap<String,Object>();
             Map<String,Object> mm = new HashMap<>();
+
             mm.put("Code",data.getPrivateId());//病历号
             mm.put("Name",data.getName());//姓名
-            mm.put("PartnerType",new HashMap<String,Object>().put("code","01"));
-            mm.put("PartnerClass",new HashMap<String,Object>().put("code","0101"));//个人客户
+
+            Map<String,Object> PartnerType = new HashMap<>();
+            PartnerType.put("Code","01");
+            mm.put("PartnerType",PartnerType);
+            Map<String,Object> PartnerClass = new HashMap<>();
+            PartnerClass.put("Code","0101");
+            mm.put("PartnerClass",PartnerClass);//个人客户
+
+            List<Map<String,Object>> PartnerAddreList = new ArrayList<Map<String,Object>>();
             Map<String,Object> PartnerAddresDTOs = new HashMap<>();
             PartnerAddresDTOs.put("ShipmentAddress",data.getHomeAddress());
             PartnerAddresDTOs.put("MobilePhone",data.getMobile());
-            mm.put("PartnerAddresDTOs",PartnerAddresDTOs);
+            PartnerAddreList.add(PartnerAddresDTOs);
+            mm.put("PartnerAddresDTOs",PartnerAddreList);
+
             List<String> DynamicPropertyKeyslist = new ArrayList<>();
-            DynamicPropertyKeyslist.add("pubuserdefnvc3");
-            DynamicPropertyKeyslist.add("pubuserdefnvc4");
-            DynamicPropertyKeyslist.add("pubuserdefnvc5");
-            DynamicPropertyKeyslist.add("pubuserdefnvc6");
-            DynamicPropertyKeyslist.add("pubuserdefnvc7");
-            DynamicPropertyKeyslist.add("pubuserdefnvc8");
+            DynamicPropertyKeyslist.add("priuserdefnvc3");
+            DynamicPropertyKeyslist.add("priuserdefnvc4");
+            DynamicPropertyKeyslist.add("priuserdefnvc5");
+            DynamicPropertyKeyslist.add("priuserdefnvc6");
+            DynamicPropertyKeyslist.add("priuserdefnvc7");
+            DynamicPropertyKeyslist.add("priuserdefnvc8");
             mm.put("DynamicPropertyKeys",DynamicPropertyKeyslist);
+
             List<String> DynamicPropertyValueslist = new ArrayList<>();
-            DynamicPropertyValueslist.add(""+data.getSex());
-            DynamicPropertyValueslist.add(data.getBirth());
+            DynamicPropertyValueslist.add(""+( "1".equals(data.getSex())?"男":"女" ));
+            try{
+                //算一下年龄？
+                Calendar now = Calendar.getInstance();
+                Calendar birthday = Calendar.getInstance();
+                String birthStr = data.getBirth();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                Date dd = sdf.parse(birthStr);
+                birthday.setTime(dd);
+                int age = now.get(Calendar.YEAR) - birthday.get(Calendar.YEAR);
+                DynamicPropertyValueslist.add(""+age);
+            }catch (Exception e){
+                DynamicPropertyValueslist.add("未知");
+            }
             DynamicPropertyValueslist.add(data.getIdentityNumber());
             DynamicPropertyValueslist.add(data.getSource().getSourceLevel1());
             DynamicPropertyValueslist.add(data.getSource().getSourceLevel2());
             DynamicPropertyValueslist.add(data.getSource().getSourceLevel3());
             mm.put("DynamicPropertyValues",DynamicPropertyValueslist);
-            list.add(mm);
+
+            mapstr.put("dto",mm);
+            String str =  JSONObject.toJSONString(mapstr);
+            list.add(str);
         }
-        mapstr.put("dtos",list);
-        String str =  JSONObject.toJSONString(mapstr);
-        return str;
+        return list;
     }
 
     //创建销售订单的 请求参数 body 的 模板

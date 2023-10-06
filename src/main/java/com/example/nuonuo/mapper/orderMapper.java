@@ -39,4 +39,8 @@ public interface orderMapper {
     List<Map<String,Object>> getTscListByCode(String Tsccode);
 
     Map<String,Object>  getTdeparmtClerkByMobile(String mobile);
+
+    String getEtoken();
+
+    Map<String,Object> getTMapByOfficeId(String officeid);
 }

@@ -26,7 +26,7 @@ public class BasicServiceImpl implements BasicService {
     @Autowired
     private orderMapper orderMapper;
 
-    //E看牙接口，根据 某个机构  查询患者档案。通过 时间 , 当天，然后 同步到 T+ 的客户档案里面
+    //E看牙接口，根据 某个机构  查询患者档案。通过 时间 , 当天，然后 同步到 T+ 的客户档案里面  138  104  125
     @Override
     public Euser getEUserInfo(String officeId){
         try {
@@ -35,7 +35,7 @@ public class BasicServiceImpl implements BasicService {
             String today = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
             parma.put("startTime",today);//当日
             parma.put("endTime",today);//当日
-            String Authorization = HttpClient.EAuthorization;
+            String Authorization = orderMapper.getEtoken();
             String result = HttpClient.doGeturlparams("https://openapi-gw.linkedcare.cn/public/v2/crm/patient/query/window", parma,Authorization);
             //将这个json字符串转换成java对象，方便进行数据 处理！
             Euser euser = JSON.parseObject(result, Euser.class);
@@ -72,12 +72,16 @@ public class BasicServiceImpl implements BasicService {
     public String createWLDW(Euser euser,Map<String,Object> params) {
         String result = "";
         try {
-            String json = MapToJson.getInComeString(euser);
-            result = HttpClient.HttpPost("/tplus/api/v2/partner/CreateBatch",//批量创建吧
-                    json,
-                    params.get("AppKey").toString(),
-                    params.get("AppSecret").toString(),
-                    orderMapper.getTokenByAppKey(params.get("AppKey").toString()));
+            List<String> jsonlist = MapToJson.getInComeString(euser);
+            for(String json : jsonlist){
+                LOGGER.info("调用T+ 创建 客户的JSON == " + json);
+                result = HttpClient.HttpPost("/tplus/api/v2/partner/Create",//1个1个创建吧
+                        json,
+                        params.get("AppKey").toString(),
+                        params.get("AppSecret").toString(),
+                        params.get("access_token").toString());
+                LOGGER.info("调用T+ 创建客户后的 result == " + result);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

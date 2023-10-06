@@ -44,6 +44,7 @@ public class TokenServiceImpl implements TokenService {
                         updateMap.put("refresh_token",refresh_token);
                         updateMap.put("access_token",access_token);
                         orderMapper.updateOrgToken(updateMap);
+                        LOGGER.error("------------ 异常前，更新了一次数据库 T token-------------------- " );
                     }else{
                         LOGGER.error("----------------更新失败，检擦！！！---------------------- " + org.get("org_id").toString());
                     }
@@ -73,13 +74,15 @@ public class TokenServiceImpl implements TokenService {
                             updateMap.put("refresh_token",refresh_token);
                             updateMap.put("access_token",access_token);
                             orderMapper.updateOrgToken(updateMap);
+                            LOGGER.error("------------ 异常后，更新了一次数据库 T token-------------------- " );
                         }else{
                             LOGGER.error("----------------更新失败，检擦！！！---------------------- " + org.get("org_id").toString());
                         }
                     }
                 }
             }catch (Exception ex){
-                LOGGER.error("---------------- 再来一次都TM失败了，检查一下看看！ ---------------------- " );
+                LOGGER.error("----------------T+ token更新 再来一次都TM失败了，检查一下看看！ ---------------------- " );
+                ex.printStackTrace();
             }
         }finally {
             return "success";
@@ -97,9 +100,11 @@ public class TokenServiceImpl implements TokenService {
             JSONObject jso = JSONObject.parseObject(result);
             if(jso.get("error") == null || "null".equals(jso.get("error").toString())){//调用成功，更新数据库！
                 String etoken = jso.get("token").toString();
+                String expiredTime = jso.getString("expiredTime");
                 Map<String,String> ekanyaMap = new HashMap<String,String>();
                 ekanyaMap.put("tenantid","027156bc-b8cf-4d72-bac4-0d720d8fb049");//对应是哪个账套的，E看牙也是一个账套对应一个机构（诊所/医院）
                 ekanyaMap.put("token",etoken);
+                ekanyaMap.put("expiredTime",expiredTime);
                 orderMapper.updateEOrgToken(ekanyaMap);
             }else{
                 LOGGER.error("----------------E看牙token更新失败，检擦！！！---------------------- ");

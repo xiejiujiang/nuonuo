@@ -12,17 +12,14 @@
 
     <update id="updateOrgToken" parameterType="java.util.Map">
         update XXX_code_token
-        set access_token = #{access_token},
-        refresh_token = #{refresh_token},
-        update_time = GETDATE(),
-        etoken = #{etoken}
+        set access_token = #{access_token},refresh_token = #{refresh_token},update_time = GETDATE()
         where org_id = #{org_id}
     </update>
 
 
     <update id="updateEOrgToken" parameterType="java.util.Map">
         update XXX_Ecode_token
-        set token = #{token}
+        set token = #{token},create_time = GETDATE()
         where tenantid = #{tenantid}
     </update>
 
@@ -76,5 +73,13 @@
         select t2.name as departMentName,t2.code as departMentCode,t1.name as clerkName,t1.code as clerkCode
         from AA_Person t1,AA_department t2
         where t1.mobile = #{moble} and t1.departmentId = t2.id
+    </select>
+
+    <select id="getEtoken" resultType="java.lang.String">
+        select top 1 token from XXX_Ecode_token
+    </select>
+
+    <select id="getTMapByOfficeId" parameterType="java.lang.String" resultType="java.util.Map">
+        select top 1 AppKey,AppSecret,access_token  from XXX_code_token
     </select>
 </mapper>
