@@ -63,6 +63,10 @@ public class ESaleData {
 
     private String timestamp;
 
+    private String TinventoryCode;
+
+    private String TinventoryUnitName;
+
     public void setDeductionLogId(int deductionLogId){
         this.deductionLogId = deductionLogId;
     }
@@ -242,5 +246,21 @@ public class ESaleData {
     }
     public String getTimestamp(){
         return this.timestamp;
+    }
+
+    public String getTinventoryCode() {
+        return TinventoryCode;
+    }
+
+    public void setTinventoryCode(String tinventoryCode) {
+        TinventoryCode = tinventoryCode;
+    }
+
+    public String getTinventoryUnitName() {
+        return TinventoryUnitName;
+    }
+
+    public void setTinventoryUnitName(String tinventoryUnitName) {
+        TinventoryUnitName = tinventoryUnitName;
     }
 }

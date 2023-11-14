@@ -1,12 +1,23 @@
 package com.example.nuonuo.utils;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.nuonuo.entity.Ekanya.EpatienCZ.EpatienCZ;
 import com.example.nuonuo.entity.Ekanya.Esale.ESaleData;
 import com.example.nuonuo.entity.Ekanya.Esale.ESaleRoot;
 import com.example.nuonuo.entity.Ekanya.Esale.PaymentItems;
 import com.example.nuonuo.entity.Ekanya.Euser.Data;
 import com.example.nuonuo.entity.Ekanya.Euser.Euser;
+import com.example.nuonuo.entity.Ekanya.EzhifuDetailByID.EzhifuDetailData;
+import com.example.nuonuo.entity.Ekanya.EzhifudanByOfficeIdANDTIME.EzhifuData;
+import com.example.nuonuo.entity.Ekanya.EzhifudanByOfficeIdANDTIME.EzhifuItems;
+import com.example.nuonuo.entity.Kcjson.Kcjson;
+import com.example.nuonuo.saentity.JsonRootBean;
+import com.example.nuonuo.saentity.SaleDeliveryDetails;
 import com.example.nuonuo.service.BasicService;
+import com.example.nuonuo.service.impl.BasicServiceImpl;
+import com.google.gson.JsonArray;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.text.SimpleDateFormat;
@@ -15,18 +26,7 @@ import java.util.*;
 @lombok.Data
 public class MapToJson {
 
-    public static void main(String[] args) throws Exception{
-        Calendar now = Calendar.getInstance();
-        Calendar birthday = Calendar.getInstance();
-
-        String s = "1989-09-16T00:00:00";
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        Date dd = sdf.parse(s);
-        birthday.setTime(dd);
-
-        int age = now.get(Calendar.YEAR) - birthday.get(Calendar.YEAR);
-        System.out.println("age == " + age);
-    }
+    private static final Logger LOGGER = LoggerFactory.getLogger(MapToJson.class);
 
     @Autowired
     private BasicService basicService;
@@ -312,8 +312,8 @@ public class MapToJson {
             }
             DynamicPropertyValueslist.add(data.getIdentityNumber());
             DynamicPropertyValueslist.add(data.getSource().getSourceLevel1());
-            DynamicPropertyValueslist.add(data.getSource().getSourceLevel2());
-            DynamicPropertyValueslist.add(data.getSource().getSourceLevel3());
+            DynamicPropertyValueslist.add("".equalsIgnoreCase(data.getSource().getSourceLevel2())?"无":data.getSource().getSourceLevel2());
+            DynamicPropertyValueslist.add("".equalsIgnoreCase(data.getSource().getSourceLevel3())?"无":data.getSource().getSourceLevel3());
             mm.put("DynamicPropertyValues",DynamicPropertyValueslist);
 
             mapstr.put("dto",mm);
@@ -324,26 +324,28 @@ public class MapToJson {
     }
 
     //创建销售订单的 请求参数 body 的 模板
-    public static List<String> getSAOrderparamsJson(Map<String,Object> mm, Map<String,Object> edatamap,Map<String,Object> docMap){
+    public static List<String> getSAOrderparamsJson(Map<String,List<EzhifuData>> ezfMap,Map<String,Object> docMap){
         List<String> jsonList = new ArrayList<String>();
         //最后 迭代这个 edatamap，每一个客户（患者），生成一个 销售订单的JSON。所以返回的也应该是一个JSON List
-        while (edatamap.keySet().iterator().hasNext()){
-            String patientId = edatamap.keySet().iterator().next(); // patientId
-            List<ESaleData> esalelist = (List<ESaleData>)edatamap.get(patientId);
-            //在这个方法内，一个客户 patientId 就对应了 所有的 ESaleData（包含了 存货，定金金额，收款方式 等） 组合的LIST
+        //开始 迭代上面 这个 整理好的 MAP
+        Set entrySet = ezfMap.entrySet();
+        Iterator iterator = entrySet.iterator();
+        while (iterator.hasNext()){
+            Object oo = iterator.next();
+            Map.Entry entry = (Map.Entry)oo;
+            String patientId = entry.getKey().toString(); // key 这个病人
+            List<EzhifuData> ezhifuDatalist = (List<EzhifuData>)entry.getValue(); // value 这个病人 对应的 所有 今日的支付项目
 
-            String doctorid = ""+esalelist.get(0).getDoctorId();//医生ID
-            //调用 员工查询 接口 可以获取 医生名称(已经写了serviceImpl)
-
+            //在这个方法内，一个客户 patientId 就对应了 所有的 （包含了 存货，定金金额，收款方式 等） 组合的LIST
             Map<String,Object> dto = new HashMap<String,Object>();
             Map<String,Object> sa = new HashMap<String,Object>();
 
+            //通过 患者档案可以查到 对应的 consultant  咨询师(以及咨询师 对应的 部门)
             Map<String,Object> Department = new HashMap<String,Object>();
             Department.put("Code",((Map)docMap.get(patientId+"-cle")).get("departMentCode").toString());//部门编码
             sa.put("Department",Department);
             Map<String,Object> Clerk = new HashMap<String,Object>();
-            //basicService.getEUserInfoById(patientId).getData().get(0).getConsultant();
-            Clerk.put("Code",((Map)docMap.get(patientId+"-cle")).get("clerkCode").toString());//业务员编码 （咨询师）  通过 患者档案可以查到 对应的 consultant  咨询师(以及咨询师 对应的 部门)
+            Clerk.put("Code",((Map)docMap.get(patientId+"-cle")).get("clerkCode").toString());//业务员编码 （咨询师）
             sa.put("Clerk",Clerk);
 
             String today = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
@@ -351,12 +353,15 @@ public class MapToJson {
             sa.put("ExternalCode",Md5.md5("XJJ"+System.currentTimeMillis()));//外部订单号，不可以重复（MD5，建议记录）
 
             Map<String,Object> Customer = new HashMap<String,Object>();
-            Customer.put("Code",patientId);//客户编码
+            // 通过 病人id patientId 找到 病历号 privateId
+            String privateId = docMap.get(patientId+"-privateId").toString();
+            Customer.put("Code",privateId);
             sa.put("Customer",Customer);
 
             /*Map<String,Object> SettleCustomer = new HashMap<String,Object>();
             SettleCustomer.put("Code","CD-030");//结算客户编码（一般等同于 客户编码）
             sa.put("SettleCustomer",SettleCustomer);*/
+
             Map<String,Object> BusinessType = new HashMap<String,Object>();
             BusinessType.put("Code","15");//业务类型编码，15–普通销售；16–销售退货
             sa.put("BusinessType",BusinessType);
@@ -371,24 +376,43 @@ public class MapToJson {
             ReciveType.put("Code","01");//收款方式，枚举类型；00--限期收款，01--全额订金，02--全额现结，03--月结，04--分期收款，05--其它；
             sa.put("ReciveType",ReciveType);
 
-            //定金
+            //表头上的 就诊类型 字符公用自定义项2
+            List<String> DynamicPropertyKeyList = new ArrayList<String>();
+            DynamicPropertyKeyList.add("pubuserdefnvc2");
+            sa.put("DynamicPropertyKeys",DynamicPropertyKeyList);
+
+            List<String> DynamicPropertyValuesList = new ArrayList<String>();
+            DynamicPropertyValuesList.add(docMap.get(patientId+"-jzlx").toString());//     初诊/复产新/复诊/复查/临时（挂号的时候会体现）
+            sa.put("DynamicPropertyValues",DynamicPropertyValuesList);
+
+            //定金收款
             Float ff = 0f;
-            Map<String,Object> Subscriptions = new HashMap<String,Object>();
-            for(ESaleData eSaleData : esalelist){
-                for(PaymentItems paymentItems : eSaleData.getPaymentItems()){
-                    Subscriptions.put("origAmount",paymentItems.getAmount());//金额
+            String free = "";
+            String freeAmount = "";
+            List<Map<String,Object>> SubscriptionsList = new ArrayList<Map<String,Object>>();
+            for(EzhifuData ezhifuData : ezhifuDatalist){
+                Map<String,Object> Subscriptions = new HashMap<String,Object>();
+                for(EzhifuDetailData ezhifuDatadetail : ezhifuData.getEzhifuDatadetail()){
+                    Subscriptions.put("origAmount",ezhifuDatadetail.getAmount());//金额
                     Map<String,Object> SettleStyle = new HashMap<String,Object>();
-                    SettleStyle.put("Code","结算方式编码");// paymentItems.get?
+                    String settleType = ezhifuDatadetail.getPaymentMethodName();
+                    if(settleType.contains("免单")){
+                        free = settleType;
+                        freeAmount = ""+ezhifuDatadetail.getAmount();//金额
+                    }
+                    //LOGGER.info("settleType ============================ " + settleType);
+                    SettleStyle.put("Code","997");// 转账？
                     Subscriptions.put("SettleStyle",SettleStyle);
                     Map<String,Object> BankAccount = new HashMap<String,Object>();
-                    BankAccount.put("Code","银行账号编码");// paymentItems.get?
+                    BankAccount.put("Name",settleType);// 账号名称， 客户已修改和T+一致
                     Subscriptions.put("BankAccount",BankAccount);
-                    ff = ff + Float.valueOf(paymentItems.getAmount());
+                    ff = ff + Float.valueOf(ezhifuDatadetail.getAmount());
+                    SubscriptionsList.add(Subscriptions);
                 }
             }
-            sa.put("Subscriptions",Subscriptions);//定金明细
-            //定金金额
-            sa.put("OrigEarnestMoney",""+ff);
+            sa.put("Subscriptions",SubscriptionsList);//定金明细
+            //定金金额 不传试试？
+            // sa.put("OrigEarnestMoney",""+ff);
 
             /*Map<String,Object> RdStyle = new HashMap<String,Object>();
             RdStyle.put("Code","201");//出库类别，RdStyleDTO对象，默认为“线上销售”类别； 具体值 我是查的数据库。
@@ -398,21 +422,29 @@ public class MapToJson {
 
             //订单明细
             List<Map<String,Object>> SaleDeliveryDetailsList = new ArrayList<Map<String,Object>>();
-            for(ESaleData eSaleData : esalelist){
-                Map<String,Object> DetailM1 = new HashMap<String,Object>();
-                Map<String,Object> DetailM1Inventory = new HashMap<String,Object>();
-                DetailM1Inventory.put("name",eSaleData.getItemName());//明细1 的 存货名称/但是这里好像是只能编码啊！
-                DetailM1.put("Inventory",DetailM1Inventory);
-                /*Map<String,Object> DetailM1Unit = new HashMap<String,Object>();
-                DetailM1Unit.put("Name","台");//明细1 的 存货计量单位
-                DetailM1.put("Unit",DetailM1Unit);*/
-                DetailM1.put("Quantity","1");//明细1 的 数量
-                //DetailM1.put("TaxRate","13");//明细1 的 税率
-                DetailM1.put("OrigTaxPrice",eSaleData.getStepAmount());//明细1 的 含税单价
-                /*DetailM1.put("idsourcevouchertype","43");//明细1 的 来源单据类型ID
-                DetailM1.put("sourceVoucherCode","SO-2022-03-0006");//明细1 的 来源单据单据编号
-                DetailM1.put("sourceVoucherDetailId","9");//明细1 的 来源单据单据对应的明细行ID*/
-                SaleDeliveryDetailsList.add(DetailM1);
+            for(EzhifuData ezhifuData : ezhifuDatalist){
+                for(EzhifuItems items : ezhifuData.getItems()){
+                    Map<String,Object> DetailM1 = new HashMap<String,Object>();
+                    Map<String,Object> DetailM1Inventory = new HashMap<String,Object>();
+                    DetailM1Inventory.put("Code",items.getTinventoryCode());//明细1 的 存货编码啊！
+                    DetailM1.put("Inventory",DetailM1Inventory);
+                    Map<String,Object> DetailM1Unit = new HashMap<String,Object>();
+                    DetailM1Unit.put("Name",items.getTinventoryUnitName());//明细1 的 存货 计量单位名称
+                    DetailM1.put("Unit",DetailM1Unit);
+                    DetailM1.put("Quantity",items.getCount());//明细1 的 数量
+                    //DetailM1.put("TaxRate","13");//明细1 的 税率
+                    DetailM1.put("OrigTaxPrice",items.getPrice());//明细1 的 含税单价
+                    DetailM1.put("DiscountRate",items.getActualAmount()/(items.getCount() * items.getPrice()));//明细1 的 折扣率
+                    /*DetailM1.put("idsourcevouchertype","43");//明细1 的 来源单据类型ID
+                    DetailM1.put("sourceVoucherCode","SO-2022-03-0006");//明细1 的 来源单据单据编号
+                    DetailM1.put("sourceVoucherDetailId","9");//明细1 的 来源单据单据对应的明细行ID*/
+                    SaleDeliveryDetailsList.add(DetailM1);
+                }
+            }
+            if(free.contains("免单")){
+                Map<String,Object> DetailM2 = new HashMap<String,Object>();
+                //????
+                SaleDeliveryDetailsList.add(DetailM2);
             }
             sa.put("SaleOrderDetails",SaleDeliveryDetailsList);
             dto.put("dto",sa);
@@ -427,42 +459,46 @@ public class MapToJson {
     public static String getSCOrderparamsJson(List<Map<String,Object>> Tsalist){
         Map<String,Object> dto = new HashMap<String,Object>();
         Map<String,Object> sa = new HashMap<String,Object>();
+
         Map<String,Object> Department = new HashMap<String,Object>();
-        Department.put("Code","HY");//部门编码
+        Department.put("Code",Tsalist.get(0).get("departmentcode").toString());//部门编码
         sa.put("Department",Department);
+
         Map<String,Object> Person = new HashMap<String,Object>();
-        Person.put("Code","CD-030");//业务员编码
+        Person.put("Code",Tsalist.get(0).get("personcode").toString());//业务员编码
         sa.put("Person",Person);
-        sa.put("VoucherDate","2022-03-15");//单据日期
+
+        sa.put("VoucherDate",new SimpleDateFormat("yyyy-MM-dd").format(new Date()));//单据日期
         sa.put("ExternalCode",Md5.md5("XJJ"+System.currentTimeMillis()));//外部订单号，不可以重复（MD5，建议记录）
 
         Map<String,Object> Customer = new HashMap<String,Object>();
-        Customer.put("Code","CD-030");//客户编码
+        Customer.put("Code",Tsalist.get(0).get("partnercode").toString());//客户编码
         sa.put("Customer",Customer);
 
         Map<String,Object> BusinessType = new HashMap<String,Object>();
         BusinessType.put("Code","15");// 这TM 是加工类型哈！
         sa.put("BusinessType",BusinessType);
-        sa.put("Memo","这是 我的 备注内容，请注意查看9！");//备注
+        sa.put("Memo","这是 自动的 备注内容，请注意查看！");//备注
 
         List<Map<String,Object>> ManufactureOrderDetails = new ArrayList<Map<String,Object>>();
         for(Map<String,Object> tmap : Tsalist){
             Map<String,Object> DetailM1 = new HashMap<String,Object>();
-            Map<String,Object> DetailM1Warehouse = new HashMap<String,Object>();
+
+            /*Map<String,Object> DetailM1Warehouse = new HashMap<String,Object>();
             DetailM1Warehouse.put("code","0101010101");//预入仓库
-            DetailM1.put("Warehouse",DetailM1Warehouse);
+            DetailM1.put("Warehouse",DetailM1Warehouse);*/
 
             Map<String,Object> DetailM1Inventory = new HashMap<String,Object>();
-            DetailM1Inventory.put("code",tmap.get("inventoryCode").toString());//明细1 的 产成品编码
+            DetailM1Inventory.put("Code",tmap.get("inventoryCode").toString());//明细1 的 产成品编码
             DetailM1.put("Inventory",DetailM1Inventory);
 
             Map<String,Object> DetailM1Unit = new HashMap<String,Object>();
             DetailM1Unit.put("Name",tmap.get("unitname").toString());//明细1 的 存货计量单位
             DetailM1.put("Unit",DetailM1Unit);
 
-            DetailM1.put("Quantity",tmap.get("quanity").toString());//明细1 的 数量
+            DetailM1.put("Quantity",tmap.get("quantity").toString());//明细1 的 数量
             DetailM1.put("idsourcevouchertype","43");//明细1 的 来源单据类型ID
-            DetailM1.put("SourceVoucherDetailId",tmap.get("iddetail").toString());//明细1 的 来源单据单据对应的明细行ID
+            DetailM1.put("SourceVoucherDetailId",tmap.get("sourceDetailId").toString());//明细1 的 来源单据单据对应的明细行ID
             ManufactureOrderDetails.add(DetailM1);
         }
         sa.put("ManufactureOrderDetails",ManufactureOrderDetails);
@@ -477,17 +513,16 @@ public class MapToJson {
         Map<String,Object> dto = new HashMap<String,Object>();
         Map<String,Object> sa = new HashMap<String,Object>();
 
-
         sa.put("IsAutoGenerateRecieveVoucher",true);//末工序自动入库
 
-        Map<String,Object> Department = new HashMap<String,Object>();
+        /*Map<String,Object> Department = new HashMap<String,Object>();
         Department.put("Code","HY");//部门编码
         sa.put("Department",Department);
         Map<String,Object> Person = new HashMap<String,Object>();
         Person.put("Code","CD-030");//业务员编码
-        sa.put("Person",Person);
+        sa.put("Person",Person);*/
 
-        sa.put("VoucherDate","2022-03-15");//单据日期
+        sa.put("VoucherDate", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));//单据日期
         sa.put("ExternalCode",Md5.md5("XJJ"+System.currentTimeMillis()));//外部订单号，不可以重复（MD5，建议记录）
         sa.put("IdSourceVoucherType","69");
 
@@ -497,7 +532,7 @@ public class MapToJson {
 
         sa.put("Memo","这是 我的 备注内容，请注意查看9！");//备注
 
-        List<Map<String,Object>> RDRecordDetails = new ArrayList<Map<String,Object>>();
+        List<Map<String,Object>> ManufactureReportDetails = new ArrayList<Map<String,Object>>();
         for(Map<String,Object> tscmap : Tsclist){
             Map<String,Object> DetailM1 = new HashMap<String,Object>();
             DetailM1.put("idsourceVoucherType","69");//来源单据类型ID
@@ -516,7 +551,7 @@ public class MapToJson {
             DetailM1Unit.put("Name",tscmap.get("unitname").toString());//明细1 的 存货计量单位
             DetailM1.put("Unit",DetailM1Unit);
 
-            Map<String,Object> Routing = new HashMap<String,Object>();
+            /*Map<String,Object> Routing = new HashMap<String,Object>();
             Routing.put("Code","");//工艺编码
             DetailM1.put("Routing",Routing);
 
@@ -526,12 +561,12 @@ public class MapToJson {
 
             Map<String,Object> WorkShop = new HashMap<String,Object>();
             WorkShop.put("Code","");//车间编码
-            DetailM1.put("WorkShop",WorkShop);
+            DetailM1.put("WorkShop",WorkShop);*/
 
 
-            RDRecordDetails.add(DetailM1);
+            ManufactureReportDetails.add(DetailM1);
         }
-        sa.put("RDRecordDetails",RDRecordDetails);
+        sa.put("ManufactureReportDetails",ManufactureReportDetails);
         dto.put("dto",sa);
         String js = JSONObject.toJSONString(dto);
         return js;
@@ -647,15 +682,15 @@ public class MapToJson {
         Map<String,Object> dto = new HashMap<String,Object>();
         Map<String,Object> sa = new HashMap<String,Object>();
         Map<String,Object> Department = new HashMap<String,Object>();
-        Department.put("Code",Tsalist.get(0).get("departName").toString());//部门编码
+        Department.put("Code",Tsalist.get(0).get("departmentcode").toString());//部门编码
         sa.put("Department",Department);
         Map<String,Object> Clerk = new HashMap<String,Object>();
-        Clerk.put("Code",Tsalist.get(0).get("clerkCode").toString());//业务员编码
+        Clerk.put("Code",Tsalist.get(0).get("personcode").toString());//业务员编码
         sa.put("Clerk",Clerk);
-        sa.put("VoucherDate",Tsalist.get(0).get("vourcherDate").toString());//单据日期
+        sa.put("VoucherDate",new SimpleDateFormat("yyyy-MM-dd").format(new Date()));//单据日期
         sa.put("ExternalCode",Md5.md5("XJJ"+System.currentTimeMillis()));//外部订单号，不可以重复（MD5，建议记录）
         Map<String,Object> Customer = new HashMap<String,Object>();
-        Customer.put("Code",Tsalist.get(0).get("parterCode").toString());//客户编码
+        Customer.put("Code",Tsalist.get(0).get("partnercode").toString());//客户编码
         sa.put("Customer",Customer);
         /*Map<String,Object> SettleCustomer = new HashMap<String,Object>();
         SettleCustomer.put("Code","CD-030");//结算客户编码（一般等同于 客户编码）
@@ -682,21 +717,21 @@ public class MapToJson {
         List<Map<String,Object>> SaleDeliveryDetails = new ArrayList<Map<String,Object>>();
         for(Map<String,Object> mm : Tsalist){
             Map<String,Object> DetailM1 = new HashMap<String,Object>();
-            Map<String,Object> DetailM1Warehouse = new HashMap<String,Object>();
+            /*Map<String,Object> DetailM1Warehouse = new HashMap<String,Object>();
             DetailM1Warehouse.put("code",mm.get("warehouseCode").toString());//明细1 的 仓库编码
-            DetailM1.put("Warehouse",DetailM1Warehouse);
+            DetailM1.put("Warehouse",DetailM1Warehouse);*/
             Map<String,Object> DetailM1Inventory = new HashMap<String,Object>();
-            DetailM1Inventory.put("code",mm.get("inventoryCode").toString());//明细1 的 存货编码
+            DetailM1Inventory.put("Code",mm.get("inventoryCode").toString());//明细1 的 存货编码
             DetailM1.put("Inventory",DetailM1Inventory);
             Map<String,Object> DetailM1Unit = new HashMap<String,Object>();
-            DetailM1Unit.put("Name",mm.get("unitName").toString());//明细1 的 存货计量单位
+            DetailM1Unit.put("Name",mm.get("unitname").toString());//明细1 的 存货计量单位
             DetailM1.put("Unit",DetailM1Unit);
             //DetailM1.put("Batch","？？？？？？？？？？？？？？？？？？？");//批号
-            DetailM1.put("Quantity",mm.get("quanity").toString());//明细1 的 数量
+            DetailM1.put("Quantity",mm.get("quantity").toString());//明细1 的 数量
             /*DetailM1.put("TaxRate","13");//明细1 的 税率*/
-            DetailM1.put("OrigTaxPrice","6666.00");//明细1 的 含税单价(实际上 在传入 来源单据之后，只会用销售订单 上的 单价？？？)
+            DetailM1.put("OrigTaxPrice",mm.get("origTaxPrice").toString());//明细1 的 含税单价(实际上 在传入 来源单据之后，只会用销售订单 上的 单价 )
             DetailM1.put("idsourcevouchertype","43");//明细1 的 来源单据类型ID  这里是销售订单
-            DetailM1.put("sourceVoucherCode",mm.get("sourceCode").toString());//明细1 的 来源单据单据编号
+            DetailM1.put("sourceVoucherCode",mm.get("code").toString());//明细1 的 来源单据单据编号
             DetailM1.put("sourceVoucherDetailId",mm.get("sourceDetailId").toString());//明细1 的 来源单据单据对应的明细行ID
             SaleDeliveryDetails.add(DetailM1);
         }
@@ -705,5 +740,227 @@ public class MapToJson {
         String js = JSONObject.toJSONString(dto);
 
         return js;
+    }
+
+    //根据整理好后的 充值list 返回 一个 标准的预收款 json
+    public static String getTskJSON(List<Map<String,Object>> czList){
+        Map<String,Object> dto = new HashMap<String,Object>();
+        Map<String,Object> sa = new HashMap<String,Object>();
+
+        sa.put("VoucherDate",new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+        Map<String,Object> BusinessType = new HashMap<String,Object>();
+        BusinessType.put("Code","34");
+        sa.put("BusinessType",BusinessType);
+
+        Map<String,Object> Partner = new HashMap<String,Object>();
+        Partner.put("Code",czList.get(0).get("partnerCode").toString());
+        sa.put("Partner",Partner);
+
+        sa.put("Memo",czList.get(0).get("notes").toString());
+        sa.put("IsReceiveFlag",true);
+
+        List<Map<String,Object>> ArapMultiSettleDetails = new ArrayList<Map<String,Object>>();
+        for(Map<String,Object> czmap : czList){
+            Map<String,Object> tmap = new HashMap<String,Object>();
+            tmap.put("SettleStyle",czmap.get("SettleStyle").toString());
+            tmap.put("BankAccount",czmap.get("BankAccount").toString());
+            tmap.put("OrigAmount",czmap.get("amount").toString());
+            ArapMultiSettleDetails.add(tmap);
+        }
+        sa.put("ArapMultiSettleDetails",ArapMultiSettleDetails);
+        dto.put("dto",sa);
+        String js = JSONObject.toJSONString(dto);
+        return js;
+    }
+
+
+    //销售出库单 json
+    public static String getSaCkJson(JsonRootBean saentity,List<Map<String,Object>> sacklist){
+        Map<String,Object> dto = new HashMap<String,Object>();
+        Map<String,Object> sa = new HashMap<String,Object>();
+        Map<String,Object> Department = new HashMap<String,Object>();
+        Department.put("Code",saentity.getData().getDepartment().getCode());//部门编码
+        sa.put("Department",Department);
+        Map<String,Object> Clerk = new HashMap<String,Object>();
+        Clerk.put("Code",saentity.getData().getClerk().getCode());//业务员编码
+        sa.put("Clerk",Clerk);
+        sa.put("VoucherDate",new SimpleDateFormat("yyyy-MM-dd").format(new Date()));//单据日期
+        sa.put("ExternalCode",Md5.md5("XJJ"+System.currentTimeMillis()));//外部订单号，不可以重复（MD5，建议记录）
+        Map<String,Object> Partner = new HashMap<String,Object>();
+        Partner.put("Code",saentity.getData().getCustomer().getCode());//客户编码
+        sa.put("Partner",Partner);
+        Map<String,Object> SettleCustomer = new HashMap<String,Object>();
+        SettleCustomer.put("Code",saentity.getData().getCustomer().getCode());//客户编码
+        sa.put("SettleCustomer",SettleCustomer);
+        Map<String,Object> BusinessType = new HashMap<String,Object>();
+        BusinessType.put("Code",saentity.getData().getBusinessType().getCode());//业务类型编码，15–普通销售；16–销售退货
+        sa.put("BusinessType",BusinessType);
+        Map<String,Object> InvoiceType = new HashMap<String,Object>();
+        InvoiceType.put("Code",saentity.getData().getInvoiceType().getCode());//票据类型，枚举类型；00--普通发票，01--专用发票，02–收据；为空时，默认按收据处理
+        sa.put("InvoiceType",InvoiceType);
+
+        Map<String,Object> RdStyle = new HashMap<String,Object>();
+        RdStyle.put("Code","201");//出库类别，销售出库 是 201，查了数据库的。
+        sa.put("RdStyle",RdStyle);
+        sa.put("Memo","自动生成的销售出库单！");//备注
+
+        //出库明细的参数
+        List<Map<String,Object>> RDRecordDetails = new ArrayList<Map<String,Object>>();
+
+        for(int idx = 0 ; idx < saentity.getData().getSaleDeliveryDetails().size(); idx ++){
+            com.example.nuonuo.saentity.SaleDeliveryDetails mm  = saentity.getData().getSaleDeliveryDetails().get(idx);
+            String currentinventoryCode = mm.getInventory().getCode();//当前的 销售的 明细1 的 存货编码
+            String saleQuantity = mm.getQuantity();//销售量
+            //判断库存！
+            for(Map<String,Object> mapp : sacklist){
+                String ckinventoryCode = mapp.get("ckinventoryCode").toString();
+                //找到这个存货 以及 对应的 数量 是否 在可用量 范围内 并且 ！ 批号 是最小的 才行！！！
+                if(currentinventoryCode.equals(ckinventoryCode)){
+                    String isMainUnit = mapp.get("isMainUnit").toString();// 0 代表销售的时候 用的 辅单位， 1 代表销售的时候用的是主单位
+                    String AvailableQuantity = mapp.get("AvailableQuantity").toString();//库存里面的 可用量  主单位 ！！！
+                    String AvailableSubQuantity = mapp.get("AvailableSubQuantity").toString();//库存里面的 可用量  辅单位 ！！！
+                    if("0".equals(isMainUnit)){
+                        AvailableQuantity = AvailableSubQuantity;//把 辅单位的数量 赋值 给 主单位，是因为我不想修改下面的比较逻辑了！
+                    }
+                    //这样是因为当现存量是小数时，就只能获取 整数部分
+                    AvailableQuantity = AvailableQuantity.substring(0,AvailableQuantity.indexOf("."));
+
+                    String Batch = mapp.get("Batch").toString();//批号
+                    String WarehouseCode = mapp.get("WarehouseCode").toString();//仓库编码
+                    String freeitem0Value = mapp.get("freeitem0Value").toString();//自由项1 对应的 值
+
+                    if(Float.valueOf(AvailableQuantity) >= Float.valueOf(saleQuantity)){//说明 这个 批号的 存货是 足够的，那就直接卖呗！
+                        Map<String,Object> DetailM1 = new HashMap<String,Object>();
+
+                        Map<String,Object> DetailM1Warehouse = new HashMap<String,Object>();
+                        DetailM1Warehouse.put("code",WarehouseCode);//明细1 的 仓库编码
+                        DetailM1.put("Warehouse",DetailM1Warehouse);
+                        DetailM1.put("Batch",Batch);//批号
+                        List<String> DynamicPropertyKeyslist = new ArrayList<>();
+                        DynamicPropertyKeyslist.add("freeitem0");//自由项1
+                        DetailM1.put("DynamicPropertyKeys",DynamicPropertyKeyslist);
+                        List<String> DynamicPropertyValueslist = new ArrayList<>();
+                        DynamicPropertyValueslist.add(freeitem0Value);//自由项1 对应的 值
+                        DetailM1.put("DynamicPropertyValues",DynamicPropertyValueslist);
+
+                        Map<String,Object> DetailM1Inventory = new HashMap<String,Object>();
+                        DetailM1Inventory.put("Code",currentinventoryCode);//明细1 的 存货编码
+                        DetailM1.put("Inventory",DetailM1Inventory);
+
+                        Map<String,Object> DetailM1Unit = new HashMap<String,Object>();
+                        DetailM1Unit.put("Name",mm.getUnit().getName());//明细1 的 存货计量单位
+                        DetailM1.put("Unit",DetailM1Unit);
+
+                        DetailM1.put("BaseQuantity",saleQuantity);//明细1 的 数量
+                        /*DetailM1.put("TaxRate","13");//明细1 的 税率*/
+                        /*DetailM1.put("OrigTaxPrice",mm.get("origTaxPrice").toString());//明细1 的 含税单价(实际上 在传入 来源单据之后，只会用销售订单 上的 单价 )*/
+
+                        DetailM1.put("idsourcevouchertype","104");//来源 销货单
+                        DetailM1.put("sourceVoucherCode",saentity.getData().getCode());//明细1 的 来源单据单据编号
+                        DetailM1.put("sourceVoucherDetailId",mm.getID());//明细1 的 来源单据单据对应的明细行ID
+                        RDRecordDetails.add(DetailM1);
+
+                        break;
+                    }else{//不够  AvailableQuantity 小于 saleQuantity
+
+                        Map<String,Object> DetailM1 = new HashMap<String,Object>();
+                        Map<String,Object> DetailM1Warehouse = new HashMap<String,Object>();
+                        DetailM1Warehouse.put("code",WarehouseCode);//明细1 的 仓库编码
+                        DetailM1.put("Warehouse",DetailM1Warehouse);
+                        DetailM1.put("Batch",Batch);//批号
+                        List<String> DynamicPropertyKeyslist = new ArrayList<>();
+                        DynamicPropertyKeyslist.add("freeitem0");//自由项1
+                        DetailM1.put("DynamicPropertyKeys",DynamicPropertyKeyslist);
+                        List<String> DynamicPropertyValueslist = new ArrayList<>();
+                        DynamicPropertyValueslist.add(freeitem0Value);//自由项1 对应的 值
+                        DetailM1.put("DynamicPropertyValues",DynamicPropertyValueslist);
+
+                        Map<String,Object> DetailM1Inventory = new HashMap<String,Object>();
+                        DetailM1Inventory.put("Code",currentinventoryCode);//明细1 的 存货编码
+                        DetailM1.put("Inventory",DetailM1Inventory);
+
+                        Map<String,Object> DetailM1Unit = new HashMap<String,Object>();
+                        DetailM1Unit.put("Name",mm.getUnit().getName());//明细1 的 存货计量单位
+                        DetailM1.put("Unit",DetailM1Unit);
+
+                        DetailM1.put("BaseQuantity",AvailableQuantity);//明细1 的 数量
+                        /*DetailM1.put("TaxRate","13");//明细1 的 税率*/
+                        /*DetailM1.put("OrigTaxPrice",mm.get("origTaxPrice").toString());//明细1 的 含税单价(实际上 在传入 来源单据之后，只会用销售订单 上的 单价 )*/
+
+                        DetailM1.put("idsourcevouchertype","104");//来源 销货单
+                        DetailM1.put("sourceVoucherCode",saentity.getData().getCode());//明细1 的 来源单据单据编号
+                        DetailM1.put("sourceVoucherDetailId",mm.getID());//明细1 的 来源单据单据对应的明细行ID
+                        RDRecordDetails.add(DetailM1);
+
+                        saleQuantity = ""+(Float.valueOf(saleQuantity) - Float.valueOf(AvailableQuantity));//相差的数量
+                    }
+                }
+            }
+        }
+        sa.put("RDRecordDetails",RDRecordDetails);
+        dto.put("dto",sa);
+        String js = JSONObject.toJSONString(dto);
+        return js;
+    }
+
+
+    //销售发票json
+    public static String getSaFPJson(JsonRootBean saentity){
+        Map<String,Object> dto = new HashMap<String,Object>();
+        Map<String,Object> sa = new HashMap<String,Object>();
+        Map<String,Object> Department = new HashMap<String,Object>();
+        Department.put("Code",saentity.getData().getDepartment().getCode());//部门编码
+        sa.put("Department",Department);
+        Map<String,Object> Clerk = new HashMap<String,Object>();
+        Clerk.put("Code",saentity.getData().getClerk().getCode());//业务员编码
+        sa.put("Clerk",Clerk);
+        sa.put("VoucherDate",new SimpleDateFormat("yyyy-MM-dd").format(new Date()));//单据日期
+        sa.put("ExternalCode",Md5.md5("XJJ"+System.currentTimeMillis()));//外部订单号，不可以重复（MD5，建议记录）
+
+        Map<String,Object> Customer = new HashMap<String,Object>();
+        Customer.put("Code",saentity.getData().getCustomer().getCode());//客户编码
+        sa.put("Customer",Customer);
+
+        Map<String,Object> BusinessType = new HashMap<String,Object>();
+        BusinessType.put("Code",saentity.getData().getBusinessType().getCode());//业务类型编码，15–普通销售；16–销售退货
+        sa.put("BusinessType",BusinessType);
+        Map<String,Object> InvoiceType = new HashMap<String,Object>();
+        InvoiceType.put("Code",saentity.getData().getInvoiceType().getCode());//票据类型，枚举类型；00--普通发票，01--专用发票，02–收据；为空时，默认按收据处理
+        sa.put("InvoiceType",InvoiceType);
+
+        Map<String,Object> ReciveType = new HashMap<String,Object>();
+        ReciveType.put("Code",saentity.getData().getReciveType().getCode());//收款方式，枚举类型；00--限期收款，01--全额订金，02--全额现结，03--月结，04--分期收款，05--其它；
+        sa.put("ReciveType",ReciveType);
+
+        //sa.put("Memo","自动生成发票");//备注
+
+        List<Map<String,Object>> SaleDeliveryDetails = new ArrayList<Map<String,Object>>();
+        for(com.example.nuonuo.saentity.SaleDeliveryDetails mm : saentity.getData().getSaleDeliveryDetails()){
+            Map<String,Object> DetailM1 = new HashMap<String,Object>();
+
+            Map<String,Object> DetailM1Inventory = new HashMap<String,Object>();
+            DetailM1Inventory.put("Code",mm.getInventory().getCode());//明细1 的 存货编码
+            DetailM1.put("Inventory",DetailM1Inventory);
+
+            Map<String,Object> DetailM1Unit = new HashMap<String,Object>();
+            DetailM1Unit.put("Name",mm.getUnit().getName());//明细1 的 存货计量单位
+            DetailM1.put("Unit",DetailM1Unit);
+
+            DetailM1.put("Quantity",mm.getQuantity());//明细1 的 数量
+            DetailM1.put("OrigTaxPrice",mm.getOrigTaxPrice());//明细1 的 含税单价(实际上 在传入 来源单据之后，只会用销售订单 上的 单价 )
+            DetailM1.put("idsourcevouchertype","104");//明细1 的 来源单据类型ID  这里是销货单
+            DetailM1.put("sourceVoucherDetailId",mm.getID());//明细1 的 来源单据单据对应的明细行ID
+            SaleDeliveryDetails.add(DetailM1);
+        }
+        sa.put("SaleInvoiceDetails",SaleDeliveryDetails);
+        dto.put("dto",sa);
+        String js = JSONObject.toJSONString(dto);
+        return js;
+    }
+
+    public static void main(String[] args) {
+        String AvailableQuantity = "1062.9999999";
+        AvailableQuantity = AvailableQuantity.substring(0,AvailableQuantity.indexOf("."));
+        System.out.println("AvailableQuantity === " + AvailableQuantity);
     }
 }

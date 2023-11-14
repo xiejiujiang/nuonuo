@@ -16,6 +16,9 @@ public interface orderMapper {
     //返回数据库中 XXX_code_token 所有记录的 企业信息
     List<Map<String,String>> getDBAllOrgList();
 
+    //根据 appKey 返回数据库中 XXX_code_token 所有记录的 企业信息
+    Map<String,String> getDBAllOrgListByappKey(String appKey);
+
     //调用refreshtoken 后更新数据库
     void updateOrgToken(Map<String,String> updateMap);
 
@@ -38,9 +41,13 @@ public interface orderMapper {
     //订单订单编号 查询 此生产加工单对应的商品明细，以及表头上的
     List<Map<String,Object>> getTscListByCode(String Tsccode);
 
-    Map<String,Object>  getTdeparmtClerkByMobile(String mobile);
+    Map<String,Object>  getTdeparmtClerkByMobile(String name);
 
     String getEtoken();
 
     Map<String,Object> getTMapByOfficeId(String officeid);
+
+    Map<String,Object> getTinventoryByName(String name);
+
+    List<Map<String,Object>> getCkByInventyCodes(@Param("inventoryCodes")String inventoryCodes,@Param("sacode")String sacode);
 }

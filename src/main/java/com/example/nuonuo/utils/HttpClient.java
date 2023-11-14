@@ -1,11 +1,7 @@
 package com.example.nuonuo.utils;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.example.nuonuo.entity.Ekanya.Esale.ESaleRoot;
-import com.example.nuonuo.entity.Ekanya.Euser.Euser;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpHeaders;
 import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
 import org.apache.http.client.config.RequestConfig;
@@ -25,14 +21,13 @@ import org.apache.http.util.EntityUtils;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class HttpClient {
 
     public final static String openurl = "https://openapi.chanjet.com";
 
-    public final static String EAuthorization = "bearer olU7AgMZPg5N8g-GEvXeaTIOW6NEtejH5guFFRRF7KCr6Kl1n7aswvJY77-xGmT8zEzKymmwEwOuPt70bdZqZKm4oFjoSdJvCSJ08DYtD2pLXAonRa77bCefPK0rsaFQuDhQ5IBcnFXQOhcEB-v0Zjb4tnS76CfJVpXa1gsoEL2wZ6yM50mCKPKg5Zsho3_JZp2KGFnR-RhS6DaG2YpqvX4x0E_qZdD3n_bRjq3HiDnjbqwQLLNonlEph4P1boKNmiNNcn_GasYsE02uoZXd9UCUQnvWNxcS_Qf53QNpSzDRvf4nkpOb2IZGostqUV0sHZiacslKKnJhvK6y6hZUKFXjGl8fC1qgxabPBRR-aq0.eyJ0aWQiOiIwMjcxNTZiYy1iOGNmLTRkNzItYmFjNC0wZDcyMGQ4ZmIwNDkifQ==";
+    public final static String EAuthorization = "bearer pQK-zHustWIG2svK6yGVw3GU4xugwj0O9Joja03uoGjvBABPWJNekdrU1CL36_wIfgTKwNm9JBg3dxnpZNLq871g2FPNgg5LHKAEUqOgzaKxVgNNIfSVTglyyIU6OyLvhSZvV8H8UPjaHFZOvH-AvYv2gJknFSIdy_R5Io6iqhRa-o_T_nWVfPNUv_f6iM-UddTPFW9m5-4o3-boN3UbZ_vHvTQ5rPplkzUCGN9aQJSdNnyzVEyjeC-ntdR71epQb_3mopNDkMJ8wUFD-bQWrtGnn9NulAcSYaMyv3iY5Q4o0T_-e03eVwfBCtbue6wfeIsPumgo3u1SgHpomnjENc3uRJeBQnriF2FtJNzmtL0.eyJ0aWQiOiIwMjcxNTZiYy1iOGNmLTRkNzItYmFjNC0wZDcyMGQ4ZmIwNDkifQ==";
 
     public static void main(String[] args) throws Exception{
         /*Map<String,String> params = new HashMap<String,String>();
@@ -79,11 +74,35 @@ public class HttpClient {
 
         //查询 E看牙 员工档案信息
         /*Map<String,String> parma = new HashMap<String,String>();
-        parma.put("providerId","10"); // 138 125  104
+        parma.put("providerId","2845"); // 138 125  104
         String Authorization = HttpClient.EAuthorization;
         String result = HttpClient.doGeturlparams("https://openapi-gw.linkedcare.cn/public/v2/pms/provider/query/by-id", parma,Authorization);
         System.out.println("res == " + result);*/
 
+
+        //查询 E看牙 指定患者档案信息
+        /*Map<String,String> parma = new HashMap<String,String>();
+        parma.put("patientId","1468182");
+        String Authorization = HttpClient.EAuthorization;
+        String result = HttpClient.doGeturlparams("https://openapi-gw.linkedcare.cn/public/v2/crm/patient/query/by-id", parma,Authorization);
+        System.out.println("res == " + result);*/
+
+        /*Map<String,String> parma = new HashMap<String,String>();
+        String today = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        parma.put("officeId","104");
+        parma.put("patientId","1315477");
+        String Authorization = HttpClient.EAuthorization;
+        String result = HttpClient.doGeturlparams("https://openapi-gw.linkedcare.cn/public/v2/gift/stored-value-card-transaction/query/by-patient", parma,Authorization);
+        System.out.println("result == " + result);*/
+
+        /*TTTT ttt = new TTTT();
+        ttt.setOfficeId("104");
+        String[] paymentIds = {"2787883"};
+        ttt.setOfficeId("104");
+        ttt.setPaymentIds(paymentIds);
+        String Authorization = HttpClient.EAuthorization;
+        String result = HttpClient.doPostEkanya("https://openapi-gw.linkedcare.cn/public/v2/billing/payment/by-ids", ttt,Authorization);
+        System.out.println("result == " + result);*/
     }
 
     /**
@@ -147,7 +166,7 @@ public class HttpClient {
             }
             String paramsstr = ss.substring(0,ss.length()-1);
             // 创建Get请求
-            //System.out.println("请求地址是： "+ url + "?" + paramsstr );
+            System.out.println("请求地址是： "+ url + "?" + paramsstr );
             HttpGet httpGet = new HttpGet(url + "?" + paramsstr);
             // 配置信息
 
@@ -554,5 +573,55 @@ public class HttpClient {
         out.close();
         in.close();
         return result;
+    }
+
+
+
+
+    //E看牙的部分查询接口是需要 通过 POST 去查询的。这个ttt 只是为了组装参数！
+    public static String doPostEkanya(String url, Object ttt,String Authorization) {
+        String reslut = "不应该返回这个哦！";
+        // 获得Http客户端(可以理解为:你得先有一个浏览器;注意:实际上HttpClient与浏览器是不一样的)
+        CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+        // 创建Post请求
+        HttpPost httpPost = new HttpPost(url);
+        // 我这里利用阿里的fastjson，将Object转换为json字符串;(需要导入com.alibaba.fastjson.JSON包)
+        String jsonString = JSON.toJSONString(ttt);
+        StringEntity entity = new StringEntity(jsonString, "UTF-8");
+        // post请求是将参数放在请求体里面传过去的;这里将entity放入post请求体中
+        httpPost.setEntity(entity);
+        httpPost.setHeader("Content-Type", "application/json;charset=utf8");
+        httpPost.setHeader("Authorization", Authorization);
+        // 响应模型
+        CloseableHttpResponse response = null;
+        try {
+            // 由客户端执行(发送)Post请求
+            response = httpClient.execute(httpPost);
+            // 从响应模型中获取响应实体
+            HttpEntity responseEntity = response.getEntity();
+            System.out.println("响应状态为:" + response.getStatusLine());
+            if (responseEntity != null) {
+                //System.out.println("响应内容长度为:" + responseEntity.getContentLength());
+                reslut = EntityUtils.toString(responseEntity);
+                //System.out.println("响应内容为:" + EntityUtils.toString(responseEntity));
+                return reslut;
+            }
+        } catch (ParseException | IOException e) {
+            e.printStackTrace();
+            return "error!!!!";
+        } finally {
+            try {
+                // 释放资源
+                if (httpClient != null) {
+                    httpClient.close();
+                }
+                if (response != null) {
+                    response.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return  reslut;
+        }
     }
 }

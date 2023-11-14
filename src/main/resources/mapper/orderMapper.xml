@@ -10,6 +10,13 @@
         select id_num,code,AppKey,AppSecret,access_token,refresh_token,user_id,org_id,app_name,update_time from XXX_code_token
     </select>
 
+    <select id="getDBAllOrgListByappKey" resultType="java.util.Map" parameterType="java.lang.String">
+        select top 1
+        id_num,code,AppKey,AppSecret,access_token,refresh_token,user_id,org_id,app_name,update_time
+        from XXX_code_token
+        where AppKey = #{appKey}
+    </select>
+
     <update id="updateOrgToken" parameterType="java.util.Map">
         update XXX_code_token
         set access_token = #{access_token},refresh_token = #{refresh_token},update_time = GETDATE()
@@ -56,23 +63,23 @@
     </select>
 
     <select id="getTSaListByCode" parameterType="java.lang.String" resultType="java.util.Map">
-        select t1.code,t2.idinventoryDTO,t3.code as inventoryCode,t2.id as iddetail,t3.idunit as unitname ,
-        t2.quanity
-        from SA_SaleOrder t1,SA_SaleOrder_b t2,aa_inventory t3
-        where t1.id = t2.idsaorderDTO and t1.code = #{code} and t2.idInventoryDTO= t3.id
+		select t1.code,t2.idinventory,t3.code as inventoryCode,t2.id as iddetail,t3.idunit as unitname,t2.quantity,t2.origTaxPrice,
+		t5.code as personcode,t4.code as departmentcode ,t6.code as partnercode ,t7.name as unitname,t2.id as sourceDetailId
+        from SA_SaleOrder t1,SA_SaleOrder_b t2,AA_inventory t3,AA_Department t4,AA_Person t5,AA_PartnerEntity t6,AA_Unit t7
+        where t1.id = t2.idSaleOrderDTO and t1.code = #{code} and t2.idinventory= t3.id and t1.iddepartment = t4.id
+		and t1.idclerk = t5.id and t1.idcustomer = t6.id and t3.idunit = t7.id
     </select>
 
     <select id="getTscListByCode" parameterType="java.lang.String" resultType="java.util.Map">
-        select t1.code,t2.idinventoryDTO,t3.code as inventoryCode,t2.id as iddetail,t3.idunit as unitname ,
-        t2.quanity
-        from MP_ManufactureOrder t1,MP_ManufactureOrder_b t2,aa_inventory t3
-        where t1.id = t2.idsaorderDTO and t1.code = #{code} and t2.idInventoryDTO= t3.id
+        select t1.code,t2.idManufactureOrderDTO,t3.code as inventoryCode,t2.id as iddetail,t3.idunit as unitname,t2.quantity
+        from MP_ManufactureOrder t1,MP_ManufactureOrder_b t2,AA_inventory t3
+        where t1.id = t2.idManufactureOrderDTO and t1.code = #{code} and t2.idinventory= t3.id
     </select>
 
     <select id="getTdeparmtClerkByMobile" parameterType="java.lang.String" resultType="java.util.Map">
         select t2.name as departMentName,t2.code as departMentCode,t1.name as clerkName,t1.code as clerkCode
         from AA_Person t1,AA_department t2
-        where t1.mobile = #{moble} and t1.departmentId = t2.id
+        where t1.name = #{name} and t1.iddepartment = t2.id
     </select>
 
     <select id="getEtoken" resultType="java.lang.String">
@@ -80,6 +87,27 @@
     </select>
 
     <select id="getTMapByOfficeId" parameterType="java.lang.String" resultType="java.util.Map">
-        select top 1 AppKey,AppSecret,access_token  from XXX_code_token
+        select top 1 AppKey,AppSecret,access_token  from XXX_code_token where officeid = #{officeid}
+    </select>
+
+    <select id="getTinventoryByName" parameterType="java.lang.String" resultType="java.util.Map">
+        select top 1
+        t1.code ,t2.name as  unitName
+        from AA_inventoryEntity t1,AA_Unit t2
+        where t1.name = #{name} and t1.idUnit = t2.id
+    </select>
+
+    <select id="getCkByInventyCodes" parameterType="java.lang.String" resultType="java.util.Map">
+        select
+            t3.code as WarehouseCode,t1.code as ckinventoryCode,
+            sum(t2.CanuseBaseQuantity) as AvailableQuantity,
+            sum(t2.CanuseSubQuantity) as AvailableSubQuantity,
+            max(t6.isMainUnit) as isMainUnit,
+            t2.batch as Batch,t2.freeItem0 as freeitem0Value
+        from AA_InventoryEntity t1,ST_CurrentStock t2 ,AA_Warehouse t3,SA_SaleDelivery_b t4,SA_SaleDelivery t5,AA_Unit t6
+        where t1.id = t2.idinventory and t2.idwarehouse = t3.id and t1.code in ${inventoryCodes}
+        and t2.idinventory = t4.idinventory and t4.idSaleDeliveryDTO = t5.id and t5.code = #{sacode} and t4.idunit = t6.id
+        group by t3.code,t1.code,t2.batch,t2.freeItem0
+        order by t2.batch asc
     </select>
 </mapper>
