@@ -778,12 +778,12 @@ public class MapToJson {
     public static String getSaCkJson(JsonRootBean saentity,List<Map<String,Object>> sacklist){
         Map<String,Object> dto = new HashMap<String,Object>();
         Map<String,Object> sa = new HashMap<String,Object>();
-        Map<String,Object> Department = new HashMap<String,Object>();
+        /*Map<String,Object> Department = new HashMap<String,Object>();
         Department.put("Code",saentity.getData().getDepartment().getCode());//部门编码
         sa.put("Department",Department);
         Map<String,Object> Clerk = new HashMap<String,Object>();
         Clerk.put("Code",saentity.getData().getClerk().getCode());//业务员编码
-        sa.put("Clerk",Clerk);
+        sa.put("Clerk",Clerk);*/
         sa.put("VoucherDate",new SimpleDateFormat("yyyy-MM-dd").format(new Date()));//单据日期
         sa.put("ExternalCode",Md5.md5("XJJ"+System.currentTimeMillis()));//外部订单号，不可以重复（MD5，建议记录）
         Map<String,Object> Partner = new HashMap<String,Object>();
@@ -794,15 +794,15 @@ public class MapToJson {
         sa.put("SettleCustomer",SettleCustomer);
         Map<String,Object> BusinessType = new HashMap<String,Object>();
         BusinessType.put("Code",saentity.getData().getBusinessType().getCode());//业务类型编码，15–普通销售；16–销售退货
-        sa.put("BusinessType",BusinessType);
-        Map<String,Object> InvoiceType = new HashMap<String,Object>();
+        sa.put("BusiType",BusinessType);
+        /*Map<String,Object> InvoiceType = new HashMap<String,Object>();
         InvoiceType.put("Code",saentity.getData().getInvoiceType().getCode());//票据类型，枚举类型；00--普通发票，01--专用发票，02–收据；为空时，默认按收据处理
-        sa.put("InvoiceType",InvoiceType);
+        sa.put("InvoiceType",InvoiceType);*/
 
         Map<String,Object> RdStyle = new HashMap<String,Object>();
         RdStyle.put("Code","201");//出库类别，销售出库 是 201，查了数据库的。
         sa.put("RdStyle",RdStyle);
-        sa.put("Memo","自动生成的销售出库单！");//备注
+        //sa.put("Memo","自动生成的销售出库单！");//备注
 
         //出库明细的参数
         List<Map<String,Object>> RDRecordDetails = new ArrayList<Map<String,Object>>();
@@ -835,7 +835,7 @@ public class MapToJson {
                         Map<String,Object> DetailM1Warehouse = new HashMap<String,Object>();
                         DetailM1Warehouse.put("code",WarehouseCode);//明细1 的 仓库编码
                         DetailM1.put("Warehouse",DetailM1Warehouse);
-                        DetailM1.put("Batch",Batch);//批号
+                        // DetailM1.put("Batch",Batch);//批号
                         List<String> DynamicPropertyKeyslist = new ArrayList<>();
                         DynamicPropertyKeyslist.add("freeitem0");//自由项1
                         DetailM1.put("DynamicPropertyKeys",DynamicPropertyKeyslist);
@@ -865,9 +865,9 @@ public class MapToJson {
 
                         Map<String,Object> DetailM1 = new HashMap<String,Object>();
                         Map<String,Object> DetailM1Warehouse = new HashMap<String,Object>();
-                        DetailM1Warehouse.put("code",WarehouseCode);//明细1 的 仓库编码
+                        DetailM1Warehouse.put("Code",WarehouseCode);//明细1 的 仓库编码
                         DetailM1.put("Warehouse",DetailM1Warehouse);
-                        DetailM1.put("Batch",Batch);//批号
+                        // DetailM1.put("Batch",Batch);//批号
                         List<String> DynamicPropertyKeyslist = new ArrayList<>();
                         DynamicPropertyKeyslist.add("freeitem0");//自由项1
                         DetailM1.put("DynamicPropertyKeys",DynamicPropertyKeyslist);
@@ -908,12 +908,12 @@ public class MapToJson {
     public static String getSaFPJson(JsonRootBean saentity){
         Map<String,Object> dto = new HashMap<String,Object>();
         Map<String,Object> sa = new HashMap<String,Object>();
-        Map<String,Object> Department = new HashMap<String,Object>();
+        /*Map<String,Object> Department = new HashMap<String,Object>();
         Department.put("Code",saentity.getData().getDepartment().getCode());//部门编码
         sa.put("Department",Department);
         Map<String,Object> Clerk = new HashMap<String,Object>();
         Clerk.put("Code",saentity.getData().getClerk().getCode());//业务员编码
-        sa.put("Clerk",Clerk);
+        sa.put("Clerk",Clerk);*/
         sa.put("VoucherDate",new SimpleDateFormat("yyyy-MM-dd").format(new Date()));//单据日期
         sa.put("ExternalCode",Md5.md5("XJJ"+System.currentTimeMillis()));//外部订单号，不可以重复（MD5，建议记录）
 
@@ -956,11 +956,5 @@ public class MapToJson {
         dto.put("dto",sa);
         String js = JSONObject.toJSONString(dto);
         return js;
-    }
-
-    public static void main(String[] args) {
-        String AvailableQuantity = "1062.9999999";
-        AvailableQuantity = AvailableQuantity.substring(0,AvailableQuantity.indexOf("."));
-        System.out.println("AvailableQuantity === " + AvailableQuantity);
     }
 }

@@ -37,7 +37,7 @@ public class SaticScheduleTask {
     private orderMapper orderMapper;
 
     //每天上午6点，下午6点
-    @Scheduled(cron = "0 25 17 * * ?")
+    @Scheduled(cron = "0 30 23 * * ?")
     private void configureTasks() {
         LOGGER.info("-------------------- 执行静态定时任务开始: " + LocalDateTime.now() + "--------------------");
         try{
@@ -52,11 +52,11 @@ public class SaticScheduleTask {
             LOGGER.info("-------------- T token 成功  ------------");
 
             //刷新E看牙的token
-            tokenService.refreshEToken();
-            LOGGER.info("-------------- E token 成功  ------------");
+            //tokenService.refreshEToken();
+            //LOGGER.info("-------------- E token 成功  ------------");
 
             //获取这个诊所对应的T+ token信息  金华江南馨 园口腔医院有限公司  138   -  [900002]金华江南馨园口腔医院有限公司
-            Map<String,Object> tmap = orderMapper.getTMapByOfficeId("138");
+            //Map<String,Object> tmap = orderMapper.getTMapByOfficeId("138");
 
             //病人-往来单位 138  104  125
             //basicService.createWLDW(basicService.getEUserInfo("138"),tmap);
@@ -71,7 +71,7 @@ public class SaticScheduleTask {
             }*/
 
             //查询支付单流水
-            EzhifudanByOfficeIdANDTIME ezhifu = basicService.getEzhifudanByOfficeIdANDTIME("138",today,tomorrow);
+            /*EzhifudanByOfficeIdANDTIME ezhifu = basicService.getEzhifudanByOfficeIdANDTIME("138",today,tomorrow);
             //存入了所有 患者的 今天的支付单信息,一个患者也可以有多个
             Map<String,List<EzhifuData>> ezfMap = new HashMap<String,List<EzhifuData>>();
             for(EzhifuData ezhifuData : ezhifu.getData()){
@@ -85,11 +85,11 @@ public class SaticScheduleTask {
                     oldList.add(ezhifuData);
                     ezfMap.put(patienid,oldList);
                 }
-            }
+            }*/
             //再来组合 销售订单 需要的数据！
 
             //最后 调用T+创建销售 订单
-            basicService.createSaorderDetail(ezfMap,tmap);
+            //basicService.createSaorderDetail(ezfMap,tmap);
 
 
 
