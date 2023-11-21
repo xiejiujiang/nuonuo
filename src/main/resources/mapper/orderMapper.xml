@@ -3,7 +3,7 @@
 <mapper namespace="com.example.nuonuo.mapper.orderMapper">
 
     <select id="getDBtest" resultType="java.lang.String">
-        select token from XXX_Ecode_token
+        select access_token from XXX_code_token
     </select>
 
     <select id="getDBAllOrgList" resultType="java.util.Map">
@@ -110,5 +110,11 @@
         and t2.CanuseBaseQuantity > 0
         group by t3.code,t1.code,t2.batch,t2.freeItem0
         order by t2.batch asc
+    </select>
+
+    <select id="getXSFPbYCODE" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select count(t3.id) as cct
+        from SA_SaleDelivery t1,SA_SaleDelivery_b t2,SA_SaleInvoice_b t3
+        where t1.code = #{vourcherCode} and t1.id = t2.idSaleDeliveryDTO and t2.id = t3.sourceVoucherDetailId and t3.idsourcevouchertype = 104
     </select>
 </mapper>

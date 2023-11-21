@@ -50,4 +50,6 @@ public interface orderMapper {
     Map<String,Object> getTinventoryByName(String name);
 
     List<Map<String,Object>> getCkByInventyCodes(@Param("inventoryCodes")String inventoryCodes,@Param("sacode")String sacode);
+
+    Integer getXSFPbYCODE(String vourcherCode);
 }

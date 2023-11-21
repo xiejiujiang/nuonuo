@@ -833,9 +833,9 @@ public class MapToJson {
                         Map<String,Object> DetailM1 = new HashMap<String,Object>();
 
                         Map<String,Object> DetailM1Warehouse = new HashMap<String,Object>();
-                        DetailM1Warehouse.put("code",WarehouseCode);//明细1 的 仓库编码
+                        DetailM1Warehouse.put("Code",WarehouseCode);//明细1 的 仓库编码
                         DetailM1.put("Warehouse",DetailM1Warehouse);
-                        // DetailM1.put("Batch",Batch);//批号
+                        DetailM1.put("Batch",Batch);//批号
                         List<String> DynamicPropertyKeyslist = new ArrayList<>();
                         DynamicPropertyKeyslist.add("freeitem0");//自由项1
                         DetailM1.put("DynamicPropertyKeys",DynamicPropertyKeyslist);
@@ -867,7 +867,7 @@ public class MapToJson {
                         Map<String,Object> DetailM1Warehouse = new HashMap<String,Object>();
                         DetailM1Warehouse.put("Code",WarehouseCode);//明细1 的 仓库编码
                         DetailM1.put("Warehouse",DetailM1Warehouse);
-                        // DetailM1.put("Batch",Batch);//批号
+                        DetailM1.put("Batch",Batch);//批号
                         List<String> DynamicPropertyKeyslist = new ArrayList<>();
                         DynamicPropertyKeyslist.add("freeitem0");//自由项1
                         DetailM1.put("DynamicPropertyKeys",DynamicPropertyKeyslist);

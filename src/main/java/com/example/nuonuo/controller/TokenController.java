@@ -138,30 +138,33 @@ public class TokenController {
                 LOGGER.info("-------------------创建销售出库单的审核结果是：" + xcres);
 
                 //通过 销货单对象 saentity 再组装一个销售发票的JSON哦！
-                String safpjson = MapToJson.getSaFPJson(saentity);
-                LOGGER.info("-------------------创建销售发票的JSON：" + safpjson + "-------------------");
-                String safpreslut = HttpClient.HttpPost("/tplus/api/v2/SaleInvoiceOpenApi/Create",
-                        safpjson,
-                        appKey,
-                        tmap.get("AppSecret").toString(),
-                        tmap.get("access_token").toString());
-                LOGGER.info("-------------------创建销售发票的结果是：" + safpreslut);
-                //如果成功了。审核一下？ safpreslut 里面有code哦！
-                JSONObject safpreslutjob = JSONObject.parseObject(safpreslut);
-                String safpreslutdata = safpreslutjob.getString("data");
-                JSONObject safpreslutdatajob = JSONObject.parseObject(safpreslutdata);
-                String xxfpcode = safpreslutdatajob.getString("Code");
-                String xxfpcodeJson = "{\n" +
-                        "\t\"param\": {\n" +
-                        "\t\t\"voucherCode\": \""+xxfpcode+"\"\n" +
-                        "\t}\n" +
-                        "}";
-                String xsfpres = HttpClient.HttpPost("/tplus/api/v2/SaleInvoiceOpenApi/Audit",
-                        xxfpcodeJson,
-                        appKey,
-                        tmap.get("AppSecret").toString(),
-                        tmap.get("access_token").toString());
-                LOGGER.info("-------------------创建销售发票的审核结果是：" + xsfpres);
+                // 判断 此销货单 没有对应的销售发票，再创建
+                if(orderMapper.getXSFPbYCODE(vourcherCode) == 0){
+                    String safpjson = MapToJson.getSaFPJson(saentity);
+                    LOGGER.info("-------------------创建销售发票的JSON：" + safpjson + "-------------------");
+                    String safpreslut = HttpClient.HttpPost("/tplus/api/v2/SaleInvoiceOpenApi/Create",
+                            safpjson,
+                            appKey,
+                            tmap.get("AppSecret").toString(),
+                            tmap.get("access_token").toString());
+                    LOGGER.info("-------------------创建销售发票的结果是：" + safpreslut);
+                    //如果成功了。审核一下？ safpreslut 里面有code哦！
+                    JSONObject safpreslutjob = JSONObject.parseObject(safpreslut);
+                    String safpreslutdata = safpreslutjob.getString("data");
+                    JSONObject safpreslutdatajob = JSONObject.parseObject(safpreslutdata);
+                    String xxfpcode = safpreslutdatajob.getString("Code");
+                    String xxfpcodeJson = "{\n" +
+                            "\t\"param\": {\n" +
+                            "\t\t\"voucherCode\": \""+xxfpcode+"\"\n" +
+                            "\t}\n" +
+                            "}";
+                    String xsfpres = HttpClient.HttpPost("/tplus/api/v2/SaleInvoiceOpenApi/Audit",
+                            xxfpcodeJson,
+                            appKey,
+                            tmap.get("AppSecret").toString(),
+                            tmap.get("access_token").toString());
+                    LOGGER.info("-------------------创建销售发票的审核结果是：" + xsfpres);
+                }
             }
         }catch (Exception e){
             e.printStackTrace();
