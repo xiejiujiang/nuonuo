@@ -25,6 +25,7 @@ public class SaleDeliveryDetails {
     private String ProductionDate;
     private String ExpiryDate;
     private String Quantity;
+    private String UnitExchangeRate;
     private String CompositionQuantity;
     private String SNCount;
     private String SerialNumbers;
@@ -165,6 +166,14 @@ public class SaleDeliveryDetails {
      public String getQuantity() {
          return Quantity;
      }
+
+    public String getUnitExchangeRate() {
+        return UnitExchangeRate;
+    }
+
+    public void setUnitExchangeRate(String unitExchangeRate) {
+        UnitExchangeRate = unitExchangeRate;
+    }
 
     public void setCompositionQuantity(String CompositionQuantity) {
          this.CompositionQuantity = CompositionQuantity;

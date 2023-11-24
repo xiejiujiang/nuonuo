@@ -802,97 +802,119 @@ public class MapToJson {
         Map<String,Object> RdStyle = new HashMap<String,Object>();
         RdStyle.put("Code","201");//出库类别，销售出库 是 201，查了数据库的。
         sa.put("RdStyle",RdStyle);
-        //sa.put("Memo","自动生成的销售出库单！");//备注
+        sa.put("Memo",saentity.getData().getMemo());//备注
 
         //出库明细的参数
         List<Map<String,Object>> RDRecordDetails = new ArrayList<Map<String,Object>>();
-
         for(int idx = 0 ; idx < saentity.getData().getSaleDeliveryDetails().size(); idx ++){
             com.example.nuonuo.saentity.SaleDeliveryDetails mm  = saentity.getData().getSaleDeliveryDetails().get(idx);
             String currentinventoryCode = mm.getInventory().getCode();//当前的 销售的 明细1 的 存货编码
             String saleQuantity = mm.getQuantity();//销售量
+            String UnitExchangeRate = mm.getUnitExchangeRate(); // 销货单明细 商品的 单位 换算率（客户只有俩，一主一辅）
+            if(UnitExchangeRate == null || "".equals(UnitExchangeRate) || "null".equals(UnitExchangeRate)){
+                UnitExchangeRate = "1";
+            }
             //判断库存！
             for(Map<String,Object> mapp : sacklist){
                 String ckinventoryCode = mapp.get("ckinventoryCode").toString();
+                // 0 代表销售的时候 用的 辅单位， 1 代表销售的时候用的是主单位
+                String isMainUnit = mapp.get("saleunitid").toString().equals(mapp.get("idbaseunit").toString())?"1":"0";
+                String AvailableQuantity = mapp.get("AvailableQuantity").toString();//库存里面的 可用量  主单位 ！！！
+                String isBatch = mapp.get("isbatch").toString();// 0 没批号 没自由项，就是 原材料 ； 1 有批号 有自由项，非原材料
+
                 //找到这个存货 以及 对应的 数量 是否 在可用量 范围内 并且 ！ 批号 是最小的 才行！！！
-                if(currentinventoryCode.equals(ckinventoryCode)){
-                    String isMainUnit = mapp.get("isMainUnit").toString();// 0 代表销售的时候 用的 辅单位， 1 代表销售的时候用的是主单位
-                    String AvailableQuantity = mapp.get("AvailableQuantity").toString();//库存里面的 可用量  主单位 ！！！
-                    String AvailableSubQuantity = mapp.get("AvailableSubQuantity").toString();//库存里面的 可用量  辅单位 ！！！
+                if(currentinventoryCode.equals(ckinventoryCode) && Float.valueOf(AvailableQuantity) >= 1){
+
                     if("0".equals(isMainUnit)){
-                        AvailableQuantity = AvailableSubQuantity;//把 辅单位的数量 赋值 给 主单位，是因为我不想修改下面的比较逻辑了！
+                        AvailableQuantity = ""+(Float.valueOf(AvailableQuantity)/Float.valueOf(UnitExchangeRate)) ;//通过 主单位 数量 除以 换算率 得到 辅单位数量
                     }
-                    //这样是因为当现存量是小数时，就只能获取 整数部分
-                    AvailableQuantity = AvailableQuantity.substring(0,AvailableQuantity.indexOf("."));
+                    if(Float.valueOf(AvailableQuantity) >= 1){
+                        //这样是因为当现存量是小数时，就只能获取 整数部分
+                        if(AvailableQuantity.contains(".")){
+                            AvailableQuantity = AvailableQuantity.substring(0,AvailableQuantity.indexOf("."));
+                        }
+                        String Batch = "";//批号
+                        if(mapp.get("Batch") != null && !"".equals(mapp.get("Batch").toString()) && !"null".equals(mapp.get("Batch").toString())){
+                            Batch = mapp.get("Batch").toString();
+                        }
+                        String WarehouseCode = mapp.get("WarehouseCode").toString();//仓库编码
 
-                    String Batch = mapp.get("Batch").toString();//批号
-                    String WarehouseCode = mapp.get("WarehouseCode").toString();//仓库编码
-                    String freeitem0Value = mapp.get("freeitem0Value").toString();//自由项1 对应的 值
+                        String freeitem0Value = "";//自由项1 对应的 值
+                        if(mapp.get("freeitem0Value") != null && !"".equals(mapp.get("freeitem0Value").toString()) && !"null".equals(mapp.get("freeitem0Value").toString())){
+                            freeitem0Value = mapp.get("freeitem0Value").toString();
+                        }
+                        if(Float.valueOf(AvailableQuantity) >= Float.valueOf(saleQuantity)){//说明 这个 批号的 存货是 足够的，那就直接卖呗！
+                            Map<String,Object> DetailM1 = new HashMap<String,Object>();
+                            Map<String,Object> DetailM1Warehouse = new HashMap<String,Object>();
+                            DetailM1Warehouse.put("Code",WarehouseCode);//明细1 的 仓库编码
+                            DetailM1.put("Warehouse",DetailM1Warehouse);
+                            if("1".equals(isBatch)){
+                                DetailM1.put("Batch",Batch);//批号
+                                List<String> DynamicPropertyKeyslist = new ArrayList<>();
+                                DynamicPropertyKeyslist.add("freeitem0");//自由项1
+                                DetailM1.put("DynamicPropertyKeys",DynamicPropertyKeyslist);
+                                List<String> DynamicPropertyValueslist = new ArrayList<>();
+                                DynamicPropertyValueslist.add(freeitem0Value);//自由项1 对应的 值
+                                DetailM1.put("DynamicPropertyValues",DynamicPropertyValueslist);
+                            }
 
-                    if(Float.valueOf(AvailableQuantity) >= Float.valueOf(saleQuantity)){//说明 这个 批号的 存货是 足够的，那就直接卖呗！
-                        Map<String,Object> DetailM1 = new HashMap<String,Object>();
+                            Map<String,Object> DetailM1Inventory = new HashMap<String,Object>();
+                            DetailM1Inventory.put("Code",currentinventoryCode);//明细1 的 存货编码
+                            DetailM1.put("Inventory",DetailM1Inventory);
 
-                        Map<String,Object> DetailM1Warehouse = new HashMap<String,Object>();
-                        DetailM1Warehouse.put("Code",WarehouseCode);//明细1 的 仓库编码
-                        DetailM1.put("Warehouse",DetailM1Warehouse);
-                        DetailM1.put("Batch",Batch);//批号
-                        List<String> DynamicPropertyKeyslist = new ArrayList<>();
-                        DynamicPropertyKeyslist.add("freeitem0");//自由项1
-                        DetailM1.put("DynamicPropertyKeys",DynamicPropertyKeyslist);
-                        List<String> DynamicPropertyValueslist = new ArrayList<>();
-                        DynamicPropertyValueslist.add(freeitem0Value);//自由项1 对应的 值
-                        DetailM1.put("DynamicPropertyValues",DynamicPropertyValueslist);
+                            Map<String,Object> DetailM1Unit = new HashMap<String,Object>();
+                            DetailM1Unit.put("Name",mm.getUnit().getName());//明细1 的 存货计量单位
+                            DetailM1.put("Unit",DetailM1Unit);
 
-                        Map<String,Object> DetailM1Inventory = new HashMap<String,Object>();
-                        DetailM1Inventory.put("Code",currentinventoryCode);//明细1 的 存货编码
-                        DetailM1.put("Inventory",DetailM1Inventory);
+                            DetailM1.put("BaseQuantity",saleQuantity);//明细1 的 数量
+                            /*DetailM1.put("TaxRate","13");//明细1 的 税率*/
+                            /*DetailM1.put("OrigTaxPrice",mm.get("origTaxPrice").toString());//明细1 的 含税单价(实际上 在传入 来源单据之后，只会用销售订单 上的 单价 )*/
 
-                        Map<String,Object> DetailM1Unit = new HashMap<String,Object>();
-                        DetailM1Unit.put("Name",mm.getUnit().getName());//明细1 的 存货计量单位
-                        DetailM1.put("Unit",DetailM1Unit);
+                            DetailM1.put("idsourcevouchertype","104");//来源 销货单
+                            DetailM1.put("sourceVoucherCode",saentity.getData().getCode());//明细1 的 来源单据单据编号
+                            DetailM1.put("sourceVoucherDetailId",mm.getID());//明细1 的 来源单据单据对应的明细行ID
+                            RDRecordDetails.add(DetailM1);
 
-                        DetailM1.put("BaseQuantity",saleQuantity);//明细1 的 数量
-                        /*DetailM1.put("TaxRate","13");//明细1 的 税率*/
-                        /*DetailM1.put("OrigTaxPrice",mm.get("origTaxPrice").toString());//明细1 的 含税单价(实际上 在传入 来源单据之后，只会用销售订单 上的 单价 )*/
+                            //String AvailableQuantity = mapp.get("AvailableQuantity").toString();//库存里面的 可用量  主单位 ！！！
+                            mapp.put("AvailableQuantity",""+(Float.valueOf(AvailableQuantity)-Float.valueOf(saleQuantity)));
+                            break;
+                        }else{//不够  AvailableQuantity 小于 saleQuantity
 
-                        DetailM1.put("idsourcevouchertype","104");//来源 销货单
-                        DetailM1.put("sourceVoucherCode",saentity.getData().getCode());//明细1 的 来源单据单据编号
-                        DetailM1.put("sourceVoucherDetailId",mm.getID());//明细1 的 来源单据单据对应的明细行ID
-                        RDRecordDetails.add(DetailM1);
+                            Map<String,Object> DetailM1 = new HashMap<String,Object>();
+                            Map<String,Object> DetailM1Warehouse = new HashMap<String,Object>();
+                            DetailM1Warehouse.put("Code",WarehouseCode);//明细1 的 仓库编码
+                            DetailM1.put("Warehouse",DetailM1Warehouse);
+                            if("1".equals(isBatch)){
+                                DetailM1.put("Batch",Batch);//批号
+                                List<String> DynamicPropertyKeyslist = new ArrayList<>();
+                                DynamicPropertyKeyslist.add("freeitem0");//自由项1
+                                DetailM1.put("DynamicPropertyKeys",DynamicPropertyKeyslist);
+                                List<String> DynamicPropertyValueslist = new ArrayList<>();
+                                DynamicPropertyValueslist.add(freeitem0Value);//自由项1 对应的 值
+                                DetailM1.put("DynamicPropertyValues",DynamicPropertyValueslist);
+                            }
 
-                        break;
-                    }else{//不够  AvailableQuantity 小于 saleQuantity
+                            Map<String,Object> DetailM1Inventory = new HashMap<String,Object>();
+                            DetailM1Inventory.put("Code",currentinventoryCode);//明细1 的 存货编码
+                            DetailM1.put("Inventory",DetailM1Inventory);
 
-                        Map<String,Object> DetailM1 = new HashMap<String,Object>();
-                        Map<String,Object> DetailM1Warehouse = new HashMap<String,Object>();
-                        DetailM1Warehouse.put("Code",WarehouseCode);//明细1 的 仓库编码
-                        DetailM1.put("Warehouse",DetailM1Warehouse);
-                        DetailM1.put("Batch",Batch);//批号
-                        List<String> DynamicPropertyKeyslist = new ArrayList<>();
-                        DynamicPropertyKeyslist.add("freeitem0");//自由项1
-                        DetailM1.put("DynamicPropertyKeys",DynamicPropertyKeyslist);
-                        List<String> DynamicPropertyValueslist = new ArrayList<>();
-                        DynamicPropertyValueslist.add(freeitem0Value);//自由项1 对应的 值
-                        DetailM1.put("DynamicPropertyValues",DynamicPropertyValueslist);
+                            Map<String,Object> DetailM1Unit = new HashMap<String,Object>();
+                            DetailM1Unit.put("Name",mm.getUnit().getName());//明细1 的 存货计量单位
+                            DetailM1.put("Unit",DetailM1Unit);
 
-                        Map<String,Object> DetailM1Inventory = new HashMap<String,Object>();
-                        DetailM1Inventory.put("Code",currentinventoryCode);//明细1 的 存货编码
-                        DetailM1.put("Inventory",DetailM1Inventory);
+                            DetailM1.put("BaseQuantity",AvailableQuantity);//明细1 的 数量
+                            /*DetailM1.put("TaxRate","13");//明细1 的 税率*/
+                            /*DetailM1.put("OrigTaxPrice",mm.get("origTaxPrice").toString());//明细1 的 含税单价(实际上 在传入 来源单据之后，只会用销售订单 上的 单价 )*/
 
-                        Map<String,Object> DetailM1Unit = new HashMap<String,Object>();
-                        DetailM1Unit.put("Name",mm.getUnit().getName());//明细1 的 存货计量单位
-                        DetailM1.put("Unit",DetailM1Unit);
+                            DetailM1.put("idsourcevouchertype","104");//来源 销货单
+                            DetailM1.put("sourceVoucherCode",saentity.getData().getCode());//明细1 的 来源单据单据编号
+                            DetailM1.put("sourceVoucherDetailId",mm.getID());//明细1 的 来源单据单据对应的明细行ID
+                            RDRecordDetails.add(DetailM1);
 
-                        DetailM1.put("BaseQuantity",AvailableQuantity);//明细1 的 数量
-                        /*DetailM1.put("TaxRate","13");//明细1 的 税率*/
-                        /*DetailM1.put("OrigTaxPrice",mm.get("origTaxPrice").toString());//明细1 的 含税单价(实际上 在传入 来源单据之后，只会用销售订单 上的 单价 )*/
-
-                        DetailM1.put("idsourcevouchertype","104");//来源 销货单
-                        DetailM1.put("sourceVoucherCode",saentity.getData().getCode());//明细1 的 来源单据单据编号
-                        DetailM1.put("sourceVoucherDetailId",mm.getID());//明细1 的 来源单据单据对应的明细行ID
-                        RDRecordDetails.add(DetailM1);
-
-                        saleQuantity = ""+(Float.valueOf(saleQuantity) - Float.valueOf(AvailableQuantity));//相差的数量
+                            saleQuantity = ""+(Float.valueOf(saleQuantity) - Float.valueOf(AvailableQuantity));//相差的数量
+                            //当前 库存量 map的 可用量 已经用完了！！
+                            mapp.put("AvailableQuantity","0.0");
+                        }
                     }
                 }
             }

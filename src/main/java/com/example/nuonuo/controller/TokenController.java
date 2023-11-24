@@ -34,7 +34,6 @@ public class TokenController {
     @Autowired
     private orderMapper orderMapper;
 
-
     //这个里面 主要 用来 接受 code ,刷新 token ，更新对应的数据库
     @RequestMapping(value="/recode", method = {RequestMethod.GET,RequestMethod.POST})
     public @ResponseBody String recode(HttpServletRequest request, HttpServletResponse response) {
@@ -68,12 +67,13 @@ public class TokenController {
             if("SaleDelivery_Audit".equals(job.getString("msgType"))){
                 SACsubJsonRootBean jrb =  job.toJavaObject(SACsubJsonRootBean.class);
                 String vourcherCode = jrb.getBizContent().getVoucherCode();
+
                 LOGGER.info("-------------------销货单：" + vourcherCode + "审核信息收到，马上调用销货单查询接口-------------------");
                 //根据销货单的单号，查询对应销货单明细信息
                 String json = "{\n" +
-                            "\t\"param\": {\n" +
-                            "\t\t\"voucherCode\":\""+vourcherCode+"\"\n" +
-                            "\t}\n" +
+                        "\t\"param\": {\n" +
+                        "\t\t\"voucherCode\":\""+vourcherCode+"\"\n" +
+                        "\t}\n" +
                         "}";
                 LOGGER.info("-------------------查询销售单明细的JSON：" + json + "-------------------");
                 String saDetailreslut = HttpClient.HttpPost("/tplus/api/v2/SaleDeliveryOpenApi/GetVoucherDTO",
@@ -165,11 +165,147 @@ public class TokenController {
                             tmap.get("access_token").toString());
                     LOGGER.info("-------------------创建销售发票的审核结果是：" + xsfpres);
                 }
+
             }
         }catch (Exception e){
             e.printStackTrace();
         }
         return "{ \"result\":\"success\" }";
+    }
+
+
+    // 已 弃 用！！！！  被上面挨着这个 替代了 。
+    //系统管理里面  的 消息订阅验证接口，官方已经 弃用了。 所以把代码注销掉。
+    @RequestMapping(value="/dy2kai", method = {RequestMethod.GET,RequestMethod.POST})
+    public @ResponseBody String dy2kai(HttpServletRequest request, HttpServletResponse response) throws  Exception{
+        String echostr = request.getParameter("echostr");
+        try{
+            /*String nonce = request.getParameter("nonce");
+            String signature = request.getParameter("signature");
+            String timestamp = request.getParameter("timestamp");
+
+            InputStreamReader reader=new InputStreamReader(request.getInputStream(),"utf-8");
+            BufferedReader buffer=new BufferedReader(reader);
+            String params=buffer.readLine();
+            //LOGGER.error("请求参数: "+params);
+            JSONObject jsonObject = JSONObject.parseObject(params);
+
+            String OrgId = jsonObject.getString("OrgId");
+            String appKey = "90014098149".equals(OrgId)?"zbqafNDm":"b"; // 90014098149 是 0001 账套，就是国杀——1 那个 ，否则就取另外一个账套
+            Map<String,String> tmap = orderMapper.getDBAllOrgListByappKey(appKey);
+
+            String vourcherCode = jsonObject.getString("Code");
+            //LOGGER.error("管理员的二开消息订阅Code =============== " + code);
+            //LOGGER.error("当前操作，0 保存，1 审核，2 弃审，3 删除，4 取消中止，5 中止");
+            String state = jsonObject.getString("SendState");
+            //LOGGER.error("SendState =============== " + state);
+            //String OrgId = jsonObject.getString("OrgId");
+            //LOGGER.error("OrgId =============== " + OrgId);
+            //如果是销货单，并且是 审核 条件，
+            if(state.equals("1")){
+                //销货单的单号  vourcherCode
+                LOGGER.info("-------------------销货单：" + vourcherCode + "审核信息收到，马上调用销货单查询接口-------------------");
+                //根据销货单的单号，查询对应销货单明细信息
+                String json = "{\n" +
+                        "\t\"param\": {\n" +
+                        "\t\t\"voucherCode\":\""+vourcherCode+"\"\n" +
+                        "\t}\n" +
+                        "}";
+                LOGGER.info("-------------------查询销售单明细的JSON：" + json + "-------------------");
+                String saDetailreslut = HttpClient.HttpPost("/tplus/api/v2/SaleDeliveryOpenApi/GetVoucherDTO",
+                        json,
+                        appKey,
+                        tmap.get("AppSecret").toString(),
+                        tmap.get("access_token").toString());
+                LOGGER.info("-------------------销货单：" + vourcherCode + "查询结果为：" + saDetailreslut);
+                JSONObject sajob = JSONObject.parseObject(saDetailreslut);
+                JsonRootBean saentity =  sajob.toJavaObject(JsonRootBean.class);
+                //解析这个 saentity 销货单明细 信息，再获取对应的 仓库，批号，自由项 信息
+                List<SaleDeliveryDetails> sadetaillist = saentity.getData().getSaleDeliveryDetails();
+                // 想了 当天  还是 通过SQL 来 获取吧
+                String inventoryCodes = "(";
+                for(SaleDeliveryDetails SaleDeliveryDetail : sadetaillist){
+                    //获取到 每一个 商品明细
+                    String inventoryCode = SaleDeliveryDetail.getInventory().getCode();
+                    inventoryCodes = inventoryCodes + "'"+ inventoryCode + "',";
+                }
+                inventoryCodes = inventoryCodes + ")";
+                inventoryCodes = inventoryCodes.replace(",)",")");
+                List<Map<String,Object>> sacklist = orderMapper.getCkByInventyCodes(inventoryCodes,saentity.getData().getCode());
+
+                *//*String sajson = "{\"param\": {\"Inventory\":" + JSONObject.toJSONString(sajsonlist)
+                        + ",\"GroupInfo\": {\"Brand\": false,\"Warehouse\": true,\"IsBatch\": true,\"IsProductionDate\": false,\"InvLocation\": false,\"IsExpiryDate\": false,\"Inventory\": true,\"InvProperty\": false}}}";
+                //再调用现存量查询接口
+                LOGGER.info("-------------------请求查询存货现存量的参数是：" + sajson);
+                String ckinventoryreslut = HttpClient.HttpPost("/tplus/api/v2/currentStock/Query",
+                        sajson,
+                        appKey,
+                        tmap.get("AppSecret").toString(),
+                        tmap.get("access_token").toString());
+                LOGGER.info("-----------请求查询存货现存量的查询结果为：" + ckinventoryreslut);
+                //用List
+                List<Kcjson> sacklist = JSONObject.parseArray(ckinventoryreslut,Kcjson.class);*//*
+
+
+                //通过 销货单对象 saentity 以及 对应的 sacklist 库存明细 组装一个 销售出库单的 JSON
+                String sackjson = MapToJson.getSaCkJson(saentity,sacklist);
+                LOGGER.info("-------------------创建销售出库单的JSON：" + sackjson + "-------------------");
+                String sackreslut = HttpClient.HttpPost("/tplus/api/v2/SaleDispatchOpenApi/Create",
+                        sackjson,
+                        appKey,
+                        tmap.get("AppSecret").toString(),
+                        tmap.get("access_token").toString());
+                LOGGER.info("-------------------创建销售出库单的结果是：" + sackreslut);
+                //如果成功了。审核一下？ sackreslut 里面有code哦！
+                JSONObject sackreslutjob = JSONObject.parseObject(sackreslut);
+                String sackreslutdata = sackreslutjob.getString("data");
+                JSONObject sackreslutdatajob = JSONObject.parseObject(sackreslutdata);
+                String xsckdcode = sackreslutdatajob.getString("Code");
+                String xsckdcodeJson = "{\n" +
+                        "\t\"param\": {\n" +
+                        "\t\t\"voucherCode\": \""+xsckdcode+"\"\n" +
+                        "\t}\n" +
+                        "}";
+                String xcres = HttpClient.HttpPost("/tplus/api/v2/SaleDispatchOpenApi/Audit",
+                        xsckdcodeJson,
+                        appKey,
+                        tmap.get("AppSecret").toString(),
+                        tmap.get("access_token").toString());
+                LOGGER.info("-------------------创建销售出库单的审核结果是：" + xcres);
+
+                //通过 销货单对象 saentity 再组装一个销售发票的JSON哦！
+                // 判断 此销货单 没有对应的销售发票，再创建
+                if(orderMapper.getXSFPbYCODE(vourcherCode) == 0){
+                    String safpjson = MapToJson.getSaFPJson(saentity);
+                    LOGGER.info("-------------------创建销售发票的JSON：" + safpjson + "-------------------");
+                    String safpreslut = HttpClient.HttpPost("/tplus/api/v2/SaleInvoiceOpenApi/Create",
+                            safpjson,
+                            appKey,
+                            tmap.get("AppSecret").toString(),
+                            tmap.get("access_token").toString());
+                    LOGGER.info("-------------------创建销售发票的结果是：" + safpreslut);
+                    //如果成功了。审核一下？ safpreslut 里面有code哦！
+                    JSONObject safpreslutjob = JSONObject.parseObject(safpreslut);
+                    String safpreslutdata = safpreslutjob.getString("data");
+                    JSONObject safpreslutdatajob = JSONObject.parseObject(safpreslutdata);
+                    String xxfpcode = safpreslutdatajob.getString("Code");
+                    String xxfpcodeJson = "{\n" +
+                            "\t\"param\": {\n" +
+                            "\t\t\"voucherCode\": \""+xxfpcode+"\"\n" +
+                            "\t}\n" +
+                            "}";
+                    String xsfpres = HttpClient.HttpPost("/tplus/api/v2/SaleInvoiceOpenApi/Audit",
+                            xxfpcodeJson,
+                            appKey,
+                            tmap.get("AppSecret").toString(),
+                            tmap.get("access_token").toString());
+                    LOGGER.info("-------------------创建销售发票的审核结果是：" + xsfpres);
+                }
+            }*/
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return echostr;
     }
 
 

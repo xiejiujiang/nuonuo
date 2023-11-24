@@ -102,12 +102,17 @@
             t3.code as WarehouseCode,t1.code as ckinventoryCode,
             sum(t2.CanuseBaseQuantity) as AvailableQuantity,
             sum(t2.CanuseSubQuantity) as AvailableSubQuantity,
-            max(t6.isMainUnit) as isMainUnit,
+            max(k3.saleunitid) as saleunitid,
+            max(k3.idbaseunit) as idbaseunit,
+            max(t1.isBatch) as isbatch,
             t2.batch as Batch,t2.freeItem0 as freeitem0Value
-        from AA_InventoryEntity t1,ST_CurrentStock t2 ,AA_Warehouse t3,SA_SaleDelivery_b t4,SA_SaleDelivery t5,AA_Unit t6
+        from AA_InventoryEntity t1,ST_CurrentStock t2 ,AA_Warehouse t3,
+		(select   k1.idinventory,max(k1.idunit) as saleunitid,max(k1.idbaseunit) as idbaseunit
+			from  SA_SaleDelivery_b k1,SA_SaleDelivery k2 where k1.idSaleDeliveryDTO = k2.id and k2.code = #{sacode}
+			group by k1.idinventory
+		)k3
         where t1.id = t2.idinventory and t2.idwarehouse = t3.id and t1.code in ${inventoryCodes}
-        and t2.idinventory = t4.idinventory and t4.idSaleDeliveryDTO = t5.id and t5.code = #{sacode} and t4.idunit = t6.id
-        and t2.CanuseBaseQuantity > 0
+        and t2.idinventory = k3.idinventory and t2.CanuseBaseQuantity > 0
         group by t3.code,t1.code,t2.batch,t2.freeItem0
         order by t2.batch asc
     </select>
