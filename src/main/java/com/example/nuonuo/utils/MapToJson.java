@@ -784,7 +784,9 @@ public class MapToJson {
         Map<String,Object> Clerk = new HashMap<String,Object>();
         Clerk.put("Code",saentity.getData().getClerk().getCode());//业务员编码
         sa.put("Clerk",Clerk);*/
-        sa.put("VoucherDate",new SimpleDateFormat("yyyy-MM-dd").format(new Date()));//单据日期
+        //单据日期 要用 销货单 表尾的 审核日期！
+        String saaudate = new SimpleDateFormat("yyyy-MM-dd").format(saentity.getData().getAuditedDate());
+        sa.put("VoucherDate",saaudate);
         sa.put("ExternalCode",Md5.md5("XJJ"+System.currentTimeMillis()));//外部订单号，不可以重复（MD5，建议记录）
         Map<String,Object> Partner = new HashMap<String,Object>();
         Partner.put("Code",saentity.getData().getCustomer().getCode());//客户编码
@@ -936,7 +938,11 @@ public class MapToJson {
         Map<String,Object> Clerk = new HashMap<String,Object>();
         Clerk.put("Code",saentity.getData().getClerk().getCode());//业务员编码
         sa.put("Clerk",Clerk);*/
-        sa.put("VoucherDate",new SimpleDateFormat("yyyy-MM-dd").format(new Date()));//单据日期
+
+        //sa.put("VoucherDate",new SimpleDateFormat("yyyy-MM-dd").format(new Date()));//单据日期
+        //单据日期 要用 销货单 表尾的 审核日期！
+        String saaudate = new SimpleDateFormat("yyyy-MM-dd").format(saentity.getData().getAuditedDate());
+        sa.put("VoucherDate",saaudate);
         sa.put("ExternalCode",Md5.md5("XJJ"+System.currentTimeMillis()));//外部订单号，不可以重复（MD5，建议记录）
 
         Map<String,Object> Customer = new HashMap<String,Object>();

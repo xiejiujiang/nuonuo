@@ -51,5 +51,11 @@ public interface orderMapper {
 
     List<Map<String,Object>> getCkByInventyCodes(@Param("inventoryCodes")String inventoryCodes,@Param("sacode")String sacode);
 
+    void updateXSCKAUDATE(@Param("xsckdcode")String xsckdcode,@Param("vourcherCode")String vourcherCode);
+
+    void updateXSFPAUDATE(@Param("xxfpcode")String xxfpcode,@Param("vourcherCode")String vourcherCode);
+
     Integer getXSFPbYCODE(String vourcherCode);
+
+    String getXSFPbYCODECODE(String vourcherCode);
 }
