@@ -1,15 +1,24 @@
 package com.example.nuonuo.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.nuonuo.entity.tiancai.TcBHDresult;
+import com.example.nuonuo.entity.tiancai.TcCKresult;
+import com.example.nuonuo.entity.tiancai.TcMDresult;
+import com.example.nuonuo.entity.tiancai.TcZXresult;
 import com.example.nuonuo.mapper.orderMapper;
 import com.example.nuonuo.service.TokenService;
 import com.example.nuonuo.utils.Ekanya;
 import com.example.nuonuo.utils.HttpClient;
+import com.example.nuonuo.utils.Md5;
+import com.example.nuonuo.utils.ObjectToXmlConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +39,8 @@ public class TokenServiceImpl implements TokenService {
                     Map<String,String> parma = new HashMap<String,String>();
                     parma.put("grantType","refresh_token");
                     parma.put("appKey",org.get("AppKey"));
-                    parma.put("refreshToken",org.get("refresh_token"));
+                    String oldrefreshtoken = org.get("refresh_token");
+                    parma.put("refreshToken",oldrefreshtoken);
                     String result = HttpClient.doGeturlparams("https://openapi.chanjet.com/auth/refreshToken", parma,"");
                     //将返回的 result 解析出来，写回数据库！,并一定更新 最后的 更新时间 ,其实 只有 refresh_token,token,和 更新时间会变。
                     JSONObject jso = JSONObject.parseObject(result);
@@ -43,8 +53,9 @@ public class TokenServiceImpl implements TokenService {
                         updateMap.put("org_id",org_id);
                         updateMap.put("refresh_token",refresh_token);
                         updateMap.put("access_token",access_token);
+                        updateMap.put("oldrefreshtoken",oldrefreshtoken);
                         orderMapper.updateOrgToken(updateMap);
-                        LOGGER.error("------------ 异常前，更新了一次数据库 T token-------------------- " );
+                        LOGGER.error("------------ 成功 更新了一次数据库 T token-------------------- " );
                     }else{
                         LOGGER.error("----------------更新失败，检擦！！！---------------------- " + org.get("org_id").toString());
                     }
@@ -74,7 +85,7 @@ public class TokenServiceImpl implements TokenService {
                             updateMap.put("refresh_token",refresh_token);
                             updateMap.put("access_token",access_token);
                             orderMapper.updateOrgToken(updateMap);
-                            LOGGER.error("------------ 异常后，更新了一次数据库 T token-------------------- " );
+                            LOGGER.error("------------ 成功 更新了一次数据库 T token-------------------- " );
                         }else{
                             LOGGER.error("----------------更新失败，检擦！！！---------------------- " + org.get("org_id").toString());
                         }
@@ -113,6 +124,114 @@ public class TokenServiceImpl implements TokenService {
             e.printStackTrace();
         }
         return "success";
+    }
+
+    @Override
+    public TcBHDresult getTCMDBHDList(String shopid, String busdate) {
+        TcBHDresult mdbhdresult;
+        String url = "http://xxxx.xx.fxscm.net/cldpoint/getStorebill4MDBD.do";
+        Map<String,String> params = new HashMap<String,String>();
+        params.put("ent","ENTa4cm");
+        params.put("username","admin");
+        params.put("password","0000");
+        params.put("busdate",busdate);
+        params.put("shopid",shopid);
+        try {
+            String res = HttpClient.doGeturlparams(url,params,"");// result 这是一个JSON字符串！
+            mdbhdresult = JSONObject.parseObject(res, TcBHDresult.class);//门店报货单
+        }catch (IOException e){
+            LOGGER.error("获取天财门店报货单接口出错！确认参数和访问地址！！！");
+            mdbhdresult = null;
+        }
+        return mdbhdresult;
+    }
+
+    @Override
+    public TcMDresult getTCMDList() {
+        TcMDresult mdbhdresult;
+        String url = "http://xxxx.xx.fxscm.net/cldpoint/getShop.do";
+        Map<String,String> params = new HashMap<String,String>();
+        params.put("ent","ENTa4cm");
+        params.put("username","admin");
+        params.put("password","0000");
+        try {
+            String res = HttpClient.doGeturlparams(url,params,"");// result 这是一个JSON字符串！
+            mdbhdresult = JSONObject.parseObject(res, TcMDresult.class);//门店
+        }catch (IOException e){
+            LOGGER.error("获取天财 门店 接口出错！确认参数和访问地址！！！");
+            mdbhdresult = null;
+        }
+        return mdbhdresult;
+    }
+
+    @Override
+    public TcZXresult getTCZXList() {
+        TcZXresult mdbhdresult;
+        String url = "http://xxxx.xx.fxscm.net/cldpoint/getRdc.do";
+        Map<String,String> params = new HashMap<String,String>();
+        params.put("ent","ENTa4cm");
+        params.put("username","admin");
+        params.put("password","0000");
+        try {
+            String res = HttpClient.doGeturlparams(url,params,"");// result 这是一个JSON字符串！
+            mdbhdresult = JSONObject.parseObject(res, TcZXresult.class);//配送中心
+        }catch (IOException e){
+            LOGGER.error("获取天财 配送中心 接口出错！确认参数和访问地址！！！");
+            mdbhdresult = null;
+        }
+        return mdbhdresult;
+    }
+
+
+    @Override
+    public TcCKresult getTCCKList() {
+        TcCKresult mdbhdresult;
+        String url = "http://xxxx.xx.fxscm.net/cldpoint/getOrganStore.do";
+        Map<String,String> params = new HashMap<String,String>();
+        params.put("ent","ENTa4cm");
+        params.put("username","admin");
+        params.put("password","0000");
+        try {
+            String res = HttpClient.doGeturlparams(url,params,"");// result 这是一个JSON字符串！
+            mdbhdresult = JSONObject.parseObject(res, TcCKresult.class);//仓库
+        }catch (IOException e){
+            LOGGER.error("获取天财 仓库 接口出错！确认参数和访问地址！！！");
+            mdbhdresult = null;
+        }
+        return mdbhdresult;
+    }
+
+
+    @Override
+    public String addHongrenDDByTcDD(Object oo) {
+        /*String result;
+        //将 天财的 入参oo（门店报货单/外销订货单） 转换成 弘人WMS入参对象后 再转换成 Xml格式 字符串
+        com.example.nuonuo.entity.hongren.rukufahuo.RFRequest request = new com.example.nuonuo.entity.hongren.rukufahuo.RFRequest();
+
+        TcBHDresult tcmdbhd = (TcBHDresult)oo;//举了个例子，这个是天财的门店报货单
+        //request.setOrderLines(tcmdbhd.getData());//????
+
+        Map<String,String> params = new HashMap<String,String>();
+        String secret = "36255923b94a5f667519a30524637e9c";
+        String body = ObjectToXmlConverter.convertObjectToXml(request);
+        params.put("secret",secret);
+        params.put("app_key","YJLF");
+        params.put("customerId","YJLF");
+        params.put("format","xml");
+        params.put("method","mixorder.create");
+        params.put("partner_id","");
+        params.put("sign_method","md5");
+        params.put("timestamp",new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+        params.put("v","2.0");
+        String sign = Md5.md5(secret+"app_key"+params.get("app_key")+"customerId"+params.get("customerId")+"format"+params.get("format")+"method"+params.get("method")
+                +"partner_id"+params.get("partner_id")+"sign_method"+params.get("sign_method")+"timestamp"+params.get("timestamp")+"v"+params.get("v")+body+secret);
+        params.put("sign",sign.toUpperCase());//大写！
+        try {
+            result = HttpClient.doPostXMLTEST("http://c-api.hr-network.cn/api/edi/qimen/service",params,body);
+        }catch (Exception e){
+            result = "天财订单下发给弘人WMS进行发货出库 失败！！！";
+        }*/
+        return "";
     }
 
 }

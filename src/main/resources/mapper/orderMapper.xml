@@ -17,10 +17,17 @@
         where AppKey = #{appKey}
     </select>
 
+    <select id="getDBAllOrgListByappKeyMobile" resultType="java.util.Map">
+        select top 1
+            id_num,code,AppKey,AppSecret,access_token,refresh_token,user_id,org_id,app_name,update_time
+        from XXX_code_token
+        where AppKey = #{appKey} and mobile = #{mobile}
+    </select>
+
     <update id="updateOrgToken" parameterType="java.util.Map">
         update XXX_code_token
         set access_token = #{access_token},refresh_token = #{refresh_token},update_time = GETDATE()
-        where org_id = #{org_id}
+        where org_id = #{org_id} and refresh_token = #{oldrefreshtoken}
     </update>
 
 
@@ -145,4 +152,13 @@
         where t1.id = t2.idSaleInvoiceDTO and t2.sourceVoucherCode = t3.code and t3.id = t4.idSaleDeliveryDTO and t2.sourceVoucherDetailId = t4.id
         and t1.auditeddate != t3.auditeddate and t1.code = #{xxfpcode} and t3.code = #{vourcherCode}
     </update>
+
+    <select id="getfapiaoMapBySA" parameterType="java.lang.String" resultType="java.util.Map">
+        select top 1
+        t4.code,t3.id as detailId   from
+        SA_SaleDelivery t1,SA_SaleDelivery_b t2,SA_SaleInvoice_b t3,SA_SaleInvoice t4,AA_inventory t5
+        where t1.code = #{sacode} and t1.id = t2.idSaleDeliveryDTO and t3.sourceVoucherCode = t1.code
+        and t3.sourceVoucherDetailId = t2.id and t3.idSaleInvoiceDTO = t4.id
+        and t2.idinventory = t5.id and t5.id = t3.idinventory and t5.code = #{inventorycode}
+    </select>
 </mapper>

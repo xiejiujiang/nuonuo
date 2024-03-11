@@ -151,7 +151,7 @@ public class HttpClient {
      *
      * @date
      */
-    public static String doGeturlparams(String url, Map<String,String> params,String Authorization) throws  Exception{
+    public static String doGeturlparams(String url, Map<String,String> params,String Authorization)throws IOException {
         // 获得Http客户端(可以理解为:你得先有一个浏览器;注意:实际上HttpClient与浏览器是不一样的)
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
 
@@ -169,7 +169,6 @@ public class HttpClient {
             System.out.println("请求地址是： "+ url + "?" + paramsstr );
             HttpGet httpGet = new HttpGet(url + "?" + paramsstr);
             // 配置信息
-
             RequestConfig requestConfig = RequestConfig.custom()
                     // 设置连接超时时间(单位毫秒)
                     .setConnectTimeout(50000)
@@ -177,15 +176,17 @@ public class HttpClient {
                     .setConnectionRequestTimeout(50000)
                     // socket读写超时时间(单位毫秒)
                     .setSocketTimeout(50000)
-
                     // 设置是否允许重定向(默认为true)
                     .setRedirectsEnabled(true).build();
-
             // 将上面的配置信息 运用到这个Get请求里
             httpGet.setConfig(requestConfig);
             if(Authorization != null && !"".equals(Authorization) && !"null".equals(Authorization)){
                 httpGet.setHeader("Authorization", Authorization);
             }
+
+            
+            httpGet.setHeader("User-Agent", "Apifox/1.0.0 (https://apifox.com)");
+
 
             // 由客户端执行(发送)Get请求
             response = httpClient.execute(httpGet);
@@ -200,6 +201,7 @@ public class HttpClient {
             }
         } catch (ParseException | IOException e) {
             e.printStackTrace();
+            result = "访问异常！！！";
         } finally {
                 // 释放资源
                 if (httpClient != null) {
@@ -429,6 +431,51 @@ public class HttpClient {
             }
             return  reslut;
         }
+    }
+
+    /**
+     * POST---XML
+     *
+     * @date
+     */
+    public static String doPostXMLTEST(String url, Map<String,String> map,String xmlbody) throws Exception{
+        String result = "";
+        try {
+            URL apiUrl = new URL(url);
+            HttpURLConnection connection = (HttpURLConnection) apiUrl.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/xml");
+
+            connection.setRequestProperty("app_key", map.get("app_key"));
+            connection.setRequestProperty("customerId", map.get("customerId"));
+            connection.setRequestProperty("format", map.get("format"));
+            connection.setRequestProperty("method", map.get("method"));
+            connection.setRequestProperty("partner_id", map.get("partner_id"));
+            connection.setRequestProperty("sign_method", map.get("sign_method"));
+            connection.setRequestProperty("timestamp", map.get("timestamp"));
+            connection.setRequestProperty("v", map.get("v"));
+            connection.setRequestProperty("sign", map.get("sign"));
+
+            connection.setDoOutput(true);
+
+            OutputStream outputStream = connection.getOutputStream();
+            outputStream.write(xmlbody.getBytes());
+            outputStream.flush();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String line;
+            StringBuilder response = new StringBuilder();
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+            result = response.toString();
+            connection.disconnect();
+        } catch (Exception e) {
+            e.printStackTrace();
+            result = "天财订单下发给弘人WMS进行发货出库 失败！！！";
+        }
+        return result;
     }
 
 

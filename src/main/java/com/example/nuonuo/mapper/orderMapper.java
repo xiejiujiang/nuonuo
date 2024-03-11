@@ -19,6 +19,8 @@ public interface orderMapper {
     //根据 appKey 返回数据库中 XXX_code_token 所有记录的 企业信息
     Map<String,String> getDBAllOrgListByappKey(String appKey);
 
+    Map<String,String> getDBAllOrgListByappKeyMobile(@Param("appKey")String appKey,@Param("mobile") String mobile);
+
     //调用refreshtoken 后更新数据库
     void updateOrgToken(Map<String,String> updateMap);
 
@@ -58,4 +60,6 @@ public interface orderMapper {
     Integer getXSFPbYCODE(String vourcherCode);
 
     String getXSFPbYCODECODE(String vourcherCode);
+
+    Map<String,Object> getfapiaoMapBySA(@Param("sacode")String sacode,@Param("inventorycode")String inventorycode);
 }

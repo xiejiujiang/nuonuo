@@ -36,20 +36,19 @@ public class SaticScheduleTask {
     @Autowired
     private orderMapper orderMapper;
 
-    //每天上午6点，下午6点
-    @Scheduled(cron = "0 6 6 * * ?")
+    //每天凌晨4点执行
+    @Scheduled(cron = "0 0 4 * * ?")
     private void configureTasks() {
         LOGGER.info("-------------------- 执行静态定时任务开始: " + LocalDateTime.now() + "--------------------");
         try{
-            String today = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+            /*String today = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(new Date());
             calendar.add(Calendar.DAY_OF_MONTH, 1);
-            String tomorrow = new SimpleDateFormat("yyyy-MM-dd").format(calendar.getTime());
+            String tomorrow = new SimpleDateFormat("yyyy-MM-dd").format(calendar.getTime());*/
 
             //刷新畅捷通的token
             tokenService.refreshToken();
-            LOGGER.info("-------------- T token 成功  ------------");
 
             //刷新E看牙的token
             //tokenService.refreshEToken();
