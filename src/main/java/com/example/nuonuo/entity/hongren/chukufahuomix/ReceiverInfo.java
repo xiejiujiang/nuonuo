@@ -1,11 +1,13 @@
-package com.example.nuonuo.entity.hongren.rukufahuo;
+package com.example.nuonuo.entity.hongren.chukufahuomix;
 
-public class SenderInfo {
+public class ReceiverInfo {
     private String company;
     private String name;
     private String zipCode;
     private String tel;
     private String mobile;
+    private String idType;
+    private String idNumber;
     private String email;
     private String countryCode;
     private String province;
@@ -52,6 +54,22 @@ public class SenderInfo {
 
     public void setMobile(String mobile) {
         this.mobile = mobile;
+    }
+
+    public String getIdType() {
+        return idType;
+    }
+
+    public void setIdType(String idType) {
+        this.idType = idType;
+    }
+
+    public String getIdNumber() {
+        return idNumber;
+    }
+
+    public void setIdNumber(String idNumber) {
+        this.idNumber = idNumber;
     }
 
     public String getEmail() {

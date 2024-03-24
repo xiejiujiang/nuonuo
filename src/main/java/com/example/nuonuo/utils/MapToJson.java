@@ -1,10 +1,6 @@
 package com.example.nuonuo.utils;
 
 import com.alibaba.fastjson.JSONObject;
-import com.example.nuonuo.entity.Ekanya.EpatienCZ.EpatienCZ;
-import com.example.nuonuo.entity.Ekanya.Esale.ESaleData;
-import com.example.nuonuo.entity.Ekanya.Esale.ESaleRoot;
-import com.example.nuonuo.entity.Ekanya.Esale.PaymentItems;
 import com.example.nuonuo.entity.Ekanya.Euser.Data;
 import com.example.nuonuo.entity.Ekanya.Euser.Euser;
 import com.example.nuonuo.entity.Ekanya.EzhifuDetailByID.EzhifuDetailData;
@@ -40,7 +36,7 @@ public class MapToJson {
         ProjectClass.put("Code",param.get("projectclass"));
         xm.put("ProjectClass",ProjectClass);
         dto.put("dto",xm);
-        String json = JSONObject.toJSONString(dto);
+        String json = "";//JSONObject.toJSONString(dto);
         return json;
     }
 

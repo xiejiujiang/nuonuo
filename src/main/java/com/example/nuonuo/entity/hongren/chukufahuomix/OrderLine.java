@@ -1,4 +1,4 @@
-package com.example.nuonuo.entity.hongren.rukufahuo;
+package com.example.nuonuo.entity.hongren.chukufahuomix;
 
 public class OrderLine {
     private String orderLineNo;

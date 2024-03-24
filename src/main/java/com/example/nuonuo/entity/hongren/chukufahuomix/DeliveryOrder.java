@@ -1,6 +1,4 @@
-package com.example.nuonuo.entity.hongren.rukufahuo;
-
-import java.util.List;
+package com.example.nuonuo.entity.hongren.chukufahuomix;
 
 public class DeliveryOrder {
     private String deliveryOrderCode;
@@ -39,7 +37,6 @@ public class DeliveryOrder {
     private String sellerMessage;
     private String remark;
     private ExtendProps extendProps;
-    private List<OrderLine> orderLines;
 
     public String getDeliveryOrderCode() {
         return deliveryOrderCode;
@@ -327,13 +324,5 @@ public class DeliveryOrder {
 
     public void setExtendProps(ExtendProps extendProps) {
         this.extendProps = extendProps;
-    }
-
-    public List<OrderLine> getOrderLines() {
-        return orderLines;
-    }
-
-    public void setOrderLines(List<OrderLine> orderLines) {
-        this.orderLines = orderLines;
     }
 }

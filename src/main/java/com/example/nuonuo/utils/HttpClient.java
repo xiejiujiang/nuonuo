@@ -1,6 +1,8 @@
 package com.example.nuonuo.utils;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.example.nuonuo.entity.tiancai.TcchukuReturn;
+import com.example.nuonuo.entity.tiancaicg.Tccg;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
@@ -387,19 +389,63 @@ public class HttpClient {
      *
      * @date
      */
-    public static String doPostTestTwo(String url, Ekanya ekanya) {
+    public static String doPostTestTwo(String url, Tccg tccg) {
         String reslut = "不应该返回这个哦！";
         // 获得Http客户端(可以理解为:你得先有一个浏览器;注意:实际上HttpClient与浏览器是不一样的)
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
         // 创建Post请求
         HttpPost httpPost = new HttpPost(url);
         // 我这里利用阿里的fastjson，将Object转换为json字符串;(需要导入com.alibaba.fastjson.JSON包)
-        String jsonString = JSON.toJSONString(ekanya);
+        String jsonString = JSONObject.toJSONString(tccg);
         StringEntity entity = new StringEntity(jsonString, "UTF-8");
         // post请求是将参数放在请求体里面传过去的;这里将entity放入post请求体中
         httpPost.setEntity(entity);
         httpPost.setHeader("Content-Type", "application/json;charset=utf8");
+        // 响应模型
+        CloseableHttpResponse response = null;
+        try {
+            // 由客户端执行(发送)Post请求
+            response = httpClient.execute(httpPost);
+            // 从响应模型中获取响应实体
+            HttpEntity responseEntity = response.getEntity();
+            System.out.println("响应状态为:" + response.getStatusLine());
+            if (responseEntity != null) {
+                //System.out.println("响应内容长度为:" + responseEntity.getContentLength());
+                reslut = EntityUtils.toString(responseEntity);
+                //System.out.println("响应内容为:" + EntityUtils.toString(responseEntity));
+                return reslut;
+            }
+        } catch (ParseException | IOException e) {
+            e.printStackTrace();
+            return "error!!!!";
+        } finally {
+            try {
+                // 释放资源
+                if (httpClient != null) {
+                    httpClient.close();
+                }
+                if (response != null) {
+                    response.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return  reslut;
+        }
+    }
 
+    public static String doPostTestThree(String url, TcchukuReturn tcchukuReturn) {
+        String reslut = "不应该返回这个哦！";
+        // 获得Http客户端(可以理解为:你得先有一个浏览器;注意:实际上HttpClient与浏览器是不一样的)
+        CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+        // 创建Post请求
+        HttpPost httpPost = new HttpPost(url);
+        // 我这里利用阿里的fastjson，将Object转换为json字符串;(需要导入com.alibaba.fastjson.JSON包)
+        String jsonString = JSONObject.toJSONString(tcchukuReturn);
+        StringEntity entity = new StringEntity(jsonString, "UTF-8");
+        // post请求是将参数放在请求体里面传过去的;这里将entity放入post请求体中
+        httpPost.setEntity(entity);
+        httpPost.setHeader("Content-Type", "application/json;charset=utf8");
         // 响应模型
         CloseableHttpResponse response = null;
         try {
@@ -633,7 +679,7 @@ public class HttpClient {
         // 创建Post请求
         HttpPost httpPost = new HttpPost(url);
         // 我这里利用阿里的fastjson，将Object转换为json字符串;(需要导入com.alibaba.fastjson.JSON包)
-        String jsonString = JSON.toJSONString(ttt);
+        String jsonString = JSONObject.toJSONString(ttt);
         StringEntity entity = new StringEntity(jsonString, "UTF-8");
         // post请求是将参数放在请求体里面传过去的;这里将entity放入post请求体中
         httpPost.setEntity(entity);

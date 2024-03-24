@@ -1,5 +1,7 @@
 package com.example.nuonuo.controller;
 
+import com.example.nuonuo.entity.tiancaicg.Tccg;
+import com.example.nuonuo.entity.tiancaicg.TccgDetail;
 import com.example.nuonuo.utils.HttpClient;
 
 import java.io.FileInputStream;
@@ -26,44 +28,46 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class TestController {
 
     public static void main(String[] args) throws Exception{
-
         try {
-            /*String url = "http://yj.test.fxscm.net:1215/cldpoint/getShop.do";
-            Map<String,String> params = new HashMap<String,String>();
-            params.put("ent","ENTa4cm");
-            params.put("username","admin");
-            params.put("password","0000");
-            String result = HttpClient.doGeturlparams(url,params,"");
-            System.out.println("result == " + result);*/
+            Tccg tccg = new Tccg();
+            tccg.setUsername("admin");
+            tccg.setPassword("0000");
+            tccg.setEnt("ENTa5ob");
+            tccg.setMessageId(""+System.currentTimeMillis());
+            tccg.setBusDate("2024-03-15 12:30:11");
+            tccg.setSourceId("123111234");
+            tccg.setAutoAuditFlag(0);
+            tccg.setCenterId("402887698e3ad5f9018e3b7910530068");
+            tccg.setSystemId("123");
+            tccg.setSourceName("测试");
+            tccg.setBusUserId("admin");
+            tccg.setArrivalDate("2024-03-15 02:30:11");
+            tccg.setSupplierId("supplierzcghsorgan");
+            List<TccgDetail> detail = new ArrayList<TccgDetail>();
+            TccgDetail tccgDetail1 = new TccgDetail();
+            tccgDetail1.setInStoreMoney(10);
+            tccgDetail1.setGiftFlag(false);
+            tccgDetail1.setInBusAmount(1);
+            tccgDetail1.setBatchCode("1234");
+            tccgDetail1.setIncludeTaxMoney(10);
+            tccgDetail1.setTaxes(0);
+            tccgDetail1.setRemark("xxxxx");
+            tccgDetail1.setInStoreId("402887698e3ad5f9018e3b794789006b");
+            tccgDetail1.setTaxMoney(0);
+            tccgDetail1.setItemId("402887698e3ad5f9018e3b7a0ff9006c");
+            tccgDetail1.setBusUnitPrice(10);
+            tccgDetail1.setSortNum(1);
+            tccgDetail1.setMakeDate("2024-03-15 02:30:11");
+            tccgDetail1.setIncludeTaxUnitPrice(10);
+            detail.add(tccgDetail1);
+            tccg.setDetail(detail);
 
-            //http://c-wms.iask.in:8765/api/edi/qimen/service?method=item.synchronize&timestamp=[2015-02-01 00:00:00] &format=xml&app_key=[appkey]&v=1.0&sign=[xxxxxxxxxxxxxxxxxxxxxx]&sign_method=md5&customerId=[customerId]
-
-            com.example.nuonuo.entity.hongren.rukufahuo.RFRequest request = new com.example.nuonuo.entity.hongren.rukufahuo.RFRequest();
-            String body = ObjectToXmlConverter.convertObjectToXml(request);
-            System.out.println("body == " + body);
-            String result = "";
-            Map<String,String> params = new HashMap<String,String>();
-            String secret = "36255923b94a5f667519a30524637e9c";
-            params.put("secret",secret);
-            params.put("app_key","YJLF");
-            params.put("customerId","YJLF");
-            params.put("format","xml");
-            params.put("method","mixorder.create");
-            params.put("partner_id","");
-            params.put("sign_method","md5");
-            params.put("timestamp",new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
-            params.put("v","2.0");
-            String sign = Md5.md5(secret+"app_key"+params.get("app_key")+"customerId"+params.get("customerId")+"format"+params.get("format")+"method"+params.get("method")
-                    +"partner_id"+params.get("partner_id")+"sign_method"+params.get("sign_method")+"timestamp"+params.get("timestamp")+"v"+params.get("v")+body+secret);
-            params.put("sign",sign.toUpperCase());//大写！
-            try {
-                result = HttpClient.doPostXMLTEST("http://c-api.hr-network.cn/api/edi/qimen/service",params,body);
-            }catch (Exception e){
-                result = "天财订单下发给弘人WMS进行发货出库 失败！！！";
-            }
-            System.out.println("result == " + result);
+            String url = "http://yj.test.fxscm.net:1215/cldpoint/api/yj/1.0/create_zxcgrk.do";
+            String res = HttpClient.doPostTestTwo(url,tccg);
+            System.out.println("result == " + res);
         }catch (Exception e) {
             e.printStackTrace();
         }
     }
+
 }

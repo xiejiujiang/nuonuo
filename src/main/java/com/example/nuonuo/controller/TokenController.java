@@ -6,6 +6,9 @@ import com.alibaba.excel.support.ExcelTypeEnum;
 import com.alibaba.fastjson.JSONObject;
 import com.example.nuonuo.SAsubscribe.SACsubJsonRootBean;
 import com.example.nuonuo.entity.Skd;
+import com.example.nuonuo.entity.mida.chukureturn.OrderDetailsRespose;
+import com.example.nuonuo.entity.mida.rukureturn.InboundStockInfo;
+import com.example.nuonuo.entity.mida.rukureturn.WarehouseStockBo;
 import com.example.nuonuo.entity.shoukd.*;
 import com.example.nuonuo.mapper.orderMapper;
 import com.example.nuonuo.saentity.JsonRootBean;
@@ -501,7 +504,7 @@ public class TokenController {
             if(fapMap == null || fapMap.get("code") == null){//说明没有生成发票
                 daoruRes = daoruRes + "销货单号："+sacode +" 没有对应发票，核销失败！";
             }else{//说明有发票
-                LOGGER.info("xxx === " + mobile+drjq+kehucode+sacode+saAmount+hexiaoAmount+zherangAmount+jsCode+bankName+skAmount+beizhu+weiyi);
+                //LOGGER.info("xxx === " + mobile+drjq+kehucode+sacode+saAmount+hexiaoAmount+zherangAmount+jsCode+bankName+skAmount+beizhu+weiyi);
                 if(jsonMap.get(weiyi) == null || "".equals(jsonMap.get(weiyi))){
                     SKRoot skRoot = new SKRoot();
                     Dto dtoo = new Dto();
@@ -539,7 +542,7 @@ public class TokenController {
                     details.setVoucherType(voucherType);
                     details.setVoucherCode(fapMap.get("code").toString());// 对应 销售发票的 编号
                     details.setVoucherDetailID(Integer.valueOf(fapMap.get("detailId").toString()));// 对应 销售发票的 明细 主键 ID
-                    details.setOrigCurrentAmount(Float.valueOf(hexiaoAmount));//核销金额
+                    details.setOrigCurrentAmount(Float.valueOf(skAmount)+Float.valueOf(zherangAmount));//核销金额 = 收款金额 + 折让金额
                     details.setOrigAllowancesAmount(zherangAmount);
                     List<Details> ldd = new ArrayList<Details>();
                     ldd.add(details);
@@ -570,7 +573,8 @@ public class TokenController {
                     details1.setVoucherType(voucherType1);
                     details1.setVoucherCode(fapMap.get("code").toString());// 对应 销售发票的 编号
                     details1.setVoucherDetailID(Integer.valueOf(fapMap.get("detailId").toString()));// 对应 销售发票的 明细 主键 ID
-                    details1.setOrigCurrentAmount(Float.valueOf(hexiaoAmount));//核销金额
+                    details1.setOrigCurrentAmount(Float.valueOf(skAmount)+Float.valueOf(zherangAmount));//核销金额 = 收款金额 + 折让金额
+                    //details1.setOrigCurrentAmount(Float.valueOf(hexiaoAmount));//核销金额
                     details1.setOrigAllowancesAmount(zherangAmount);
                     skRoot1.getDto().getDetails().add(details1);
                     Gson gson = new Gson();
@@ -611,12 +615,29 @@ public class TokenController {
     }
 
 
+    // --------------------------------  天财 回调  出库单未审核发单（统配+外销） ------------------------------//
+    @RequestMapping(value="/tiancai", method = {RequestMethod.GET,RequestMethod.POST})
+    public @ResponseBody String tiancai(HttpServletRequest request, HttpServletResponse response){
+        String res = "{\"code\":\"0000\",\"message\":\"success\"}";
+        try {
+            StringBuilder xmlData = new StringBuilder();
+            BufferedReader reader = request.getReader();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                xmlData.append(line);
+            }
+            LOGGER.error("天财 反馈的 String == " + xmlData.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+            res = "{\"code\":\"9001\",\"message\":\"接收异常，需要重新推送！\"}";
+        }
+        return res;
+    }
 
     // --------------------------------  弘人WMS  回调------------------------------//
     @RequestMapping(value="/hongren", method = {RequestMethod.GET,RequestMethod.POST})
     public @ResponseBody String hongren(HttpServletRequest request, HttpServletResponse response) {
         String res = "";
-        StringBuilder xmlData = new StringBuilder();
         try {
             String method = request.getParameter("method");// 不同业务  传入的是 不同的 method
             LOGGER.error("method == " + method);
@@ -630,15 +651,22 @@ public class TokenController {
             LOGGER.error("sign == " + sign);
             String customerId = request.getParameter("customerId");
             LOGGER.error("customerId == " + customerId);
-
             //以此验证 获取的 url参数和body参数 是否正确，后续可能涉及到 加密验证合法性。
+
+            StringBuilder xmlData = new StringBuilder();
             BufferedReader reader = request.getReader();
             String line;
             while ((line = reader.readLine()) != null) {
                 xmlData.append(line);
             }
-            LOGGER.error("弘人 method xml == " + xmlData.toString());
-
+            if("entryorder.confirm".equals(method)){//入库确认！
+                LOGGER.error("弘人入库反馈的 xml == " + xmlData.toString());
+                String rukuresult = tokenService.addHongrenRuKuToTCMT(xmlData.toString());
+            }
+            if("stockout.confirm".equals(method)){//出库确认！
+                LOGGER.error("弘人出库反馈的 xml == " + xmlData.toString());
+                String rukuresult = tokenService.addHongrenChuKuToTCMT(xmlData.toString());
+            }
             res = "<?xml version=\"1.0\" encoding=\"utf-8\"?><response><flag>success</flag><code>0000</code><message>接收成功</message></response>";
         } catch (IOException e) {
             e.printStackTrace();
@@ -647,120 +675,36 @@ public class TokenController {
         return res;
     }
 
-    //弘人WMS的反向接口，入库确认 用于接受 返回的 xml 格式数据
-    @RequestMapping(value="/entryorder.confirm", method = {RequestMethod.GET,RequestMethod.POST})
-    public @ResponseBody String hongrenruku(HttpServletRequest request, HttpServletResponse response) {
+    // --------------------------------  米大WMS  回调------------------------------//
+    @RequestMapping(value="/mida", method = {RequestMethod.GET,RequestMethod.POST})
+    public @ResponseBody String mida(HttpServletRequest request, HttpServletResponse response) {
         String res = "";
-        StringBuilder xmlData = new StringBuilder();
         try {
-            String sign_method = request.getParameter("sign_method");// 等于 md5
-            System.out.println("sign_method == " + sign_method);
-            LOGGER.error("sign_method == " + sign_method);
-            //以此验证 获取的 url参数和body参数 是否正确，后续可能涉及到 加密验证合法性。
+            StringBuilder xmlData = new StringBuilder();
             BufferedReader reader = request.getReader();
             String line;
             while ((line = reader.readLine()) != null) {
                 xmlData.append(line);
             }
-            System.out.println("ruku xml == " + xmlData.toString());
-            //Request HongRenRUKU = XmlToObjectConverter.convertXmlToObject(xmlData.toString(), Request.class);
-            //再调用service 把 HongRenRUKU 传入 天财的 采购入库单中
-            //tokenService.addTcRUKU(HongRenRUKU);
-            res = "<?xml version=\"1.0\" encoding=\"utf-8\"?><response><flag>success</flag><code>0000</code><message>接收成功</message></response>";
+            LOGGER.error("米大 反馈的 String == " + xmlData.toString());
+            JSONObject job = JSONObject.parseObject(xmlData.toString());
+            String sign = job.getString("sign");
+            String message_type = job.getString("message_type");
+            String app_key = job.getString("app_key");
+            String message = job.getString("message");
+            if("ORDER_CHANGE".equals(message_type)){//ORDER_CHANGE:订单信息变更,就是米大出库发货
+                List<OrderDetailsRespose> midachukureturn = JSONObject.parseArray(message,OrderDetailsRespose.class);
+                String rukuresult = tokenService.addMiDaChuKuToTCMT(midachukureturn);
+            }
+            if("STOCK_INBOUND".equals(message_type)){//STOCK_INBOUND:库存入库
+                InboundStockInfo midaruku = JSONObject.parseObject(message, InboundStockInfo.class);
+                String rukuresult = tokenService.addMiDaRuKuToTCMT(midaruku);
+            }
+            res = "{\"code\":\"0000\",\"message\":\"success\"}";
         } catch (IOException e) {
             e.printStackTrace();
-            res = "<?xml version=\"1.0\" encoding=\"utf-8\"?><response><flag>failure</flag><code>4001</code><message>接收失败，请重试</message></response>";
+            res = "{\"code\":\"9001\",\"message\":\"接收异常，需要重新推送！\"}";
         }
         return res;
-    }
-
-    //弘人WMS的反向接口，发货出库确认 用于接受 返回的 xml 格式数据
-    @RequestMapping(value="/stockout.confirm", method = {RequestMethod.GET,RequestMethod.POST})
-    public @ResponseBody String hongrenchuku(HttpServletRequest request, HttpServletResponse response) {
-        String res = "";
-        StringBuilder xmlData = new StringBuilder();
-        try {
-            String sign_method = request.getParameter("sign_method");// 等于 md5
-            System.out.println("sign_method == " + sign_method);
-            LOGGER.error("sign_method == " + sign_method);
-            //以此验证 获取的 url参数和body参数 是否正确，后续可能涉及到 加密验证合法性。
-            BufferedReader reader = request.getReader();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                xmlData.append(line);
-            }
-            System.out.println("chuku xml == " + xmlData.toString());
-            //com.example.nuonuo.entity.hongren.chukuQR.Request HongRenCHUKU = XmlToObjectConverter.convertXmlToObject(xmlData.toString(), com.example.nuonuo.entity.hongren.chukuQR.Request.class);
-            //再调用service 把 弘人WMS出库确认的数据 传入 天财的 中心出库单反写 的 实际发货中！
-            //HongRenCHUKU.getOrderLines().get(0).getBatchs().get(0).getActualQty();//举个例  实发数量！
-
-
-            res = "<?xml version=\"1.0\" encoding=\"utf-8\"?><response><flag>success</flag><code>0000</code><message>接收成功</message></response>";
-        } catch (IOException e) {
-            e.printStackTrace();
-            res = "<?xml version=\"1.0\" encoding=\"utf-8\"?><response><flag>failure</flag><code>4001</code><message>接收失败，请重试</message></response>";
-        }
-        return res;
-    }
-
-
-
-    @RequestMapping(value = "/testt", method = {RequestMethod.GET,RequestMethod.POST})
-    public @ResponseBody String testt(HttpServletRequest requestt, HttpServletResponse response) {
-        try {
-            com.example.nuonuo.entity.hongren.rukufahuo.RFRequest request = new com.example.nuonuo.entity.hongren.rukufahuo.RFRequest();
-            String body = ObjectToXmlConverter.convertObjectToXml(request);
-            System.out.println("body == " + body);
-            String result = "";
-            Map<String,String> params = new HashMap<String,String>();
-            String secret = "36255923b94a5f667519a30524637e9c";
-            params.put("secret",secret);
-            params.put("app_key","YJLF");
-            params.put("customerId","YJLF");
-            params.put("format","xml");
-            params.put("method","mixorder.create");
-            params.put("partner_id","");
-            params.put("sign_method","md5");
-            params.put("timestamp",new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
-            params.put("v","2.0");
-            String sign = Md5.md5(secret+"app_key"+params.get("app_key")+"customerId"+params.get("customerId")+"format"+params.get("format")+"method"+params.get("method")
-                    +"partner_id"+params.get("partner_id")+"sign_method"+params.get("sign_method")+"timestamp"+params.get("timestamp")+"v"+params.get("v")+body+secret);
-            params.put("sign",sign.toUpperCase());//大写！
-            try {
-                result = HttpClient.doPostXMLTEST("http://localhost:9998/nuonuo/token/testhongren?app_key="+params.get("app_key")+"&sign="+params.get("sign")
-                                +"&method="+params.get("method")+"&timestamp="+params.get("timestamp")+"&sign_method="+params.get("sign_method")
-                                +"&v="+params.get("v")+"&format="+params.get("format"),
-                        params,body);
-            }catch (Exception e){
-                e.printStackTrace();
-                result = "天财订单下发给弘人WMS进行发货出库 失败！！！";
-            }
-            System.out.println("result == " + result);
-        }catch (Exception e){
-            e.printStackTrace();;
-        }
-        return "看日志，帅哥！";
-    }
-
-
-    @RequestMapping(value = "/testhongren", method = RequestMethod.POST)
-    public @ResponseBody String testhongren(HttpServletRequest request, @RequestBody String data) {
-        try {
-            String requestUrl = request.getRequestURI() + "?" + request.getQueryString();
-            LOGGER.error("requestUrl == " + requestUrl);
-            Map<String, String> params = QimenUtils.getParamsFromUrl(requestUrl);
-            String method = params.get("method");
-            String sign = params.get("sign");
-            String appKey = params.get("app_key");
-            String customerCode = params.get("customerId");
-            LOGGER.error("method == " + method);
-            LOGGER.error("sign == " + sign);
-            LOGGER.error("appKey == " + appKey);
-            LOGGER.error("customerCode == " + customerCode);
-            LOGGER.error("xml data == " + data);
-        }catch (Exception e){
-            e.printStackTrace();;
-        }
-        return "看日志，帅哥！";
     }
 }

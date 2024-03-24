@@ -1,14 +1,12 @@
-package com.example.nuonuo.entity.hongren.rukufahuo;
+package com.example.nuonuo.entity.hongren.chukufahuomix;
 
-import com.example.nuonuo.entity.hongren.rukufahuo.DeliveryOrder;
-import com.example.nuonuo.entity.hongren.rukufahuo.OrderLine;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.List;
 
 @XmlRootElement
-public class RFRequest {
+public class Request {
+
     private DeliveryOrder deliveryOrder;
-    private List<OrderLine> orderLines;
+    private OrderLines orderLines;
 
     public DeliveryOrder getDeliveryOrder() {
         return deliveryOrder;
@@ -18,11 +16,11 @@ public class RFRequest {
         this.deliveryOrder = deliveryOrder;
     }
 
-    public List<OrderLine> getOrderLines() {
+    public OrderLines getOrderLines() {
         return orderLines;
     }
 
-    public void setOrderLines(List<OrderLine> orderLines) {
+    public void setOrderLines(OrderLines orderLines) {
         this.orderLines = orderLines;
     }
 }
