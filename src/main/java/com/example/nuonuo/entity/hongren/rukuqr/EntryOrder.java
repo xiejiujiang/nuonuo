@@ -11,6 +11,7 @@ public class EntryOrder {
     private String status;//入库单状态, string (50) , 必填 (NEW-未开始处理, ACCEPT-仓库接单 ,PARTFULFILLED-部分收货完成, FULFILLED-收货完成, EXCEPTION-异常, CANCELED-取消, CLOSED-关闭, REJECT-拒单, CANCELEDFAIL-取消失败) , (只传英文编码)
     private String operateTime;//操作时间, string (19) , YYYY-MM-DD HH:MM:SS，(当status=FULFILLED, operateTime 为实收时间)
     private String remark;//备注, string (500)
+    private String supplierCode;//弘人的 供应商编码
 
     public String getEntryOrderCode() {
         return entryOrderCode;
@@ -90,5 +91,30 @@ public class EntryOrder {
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+    public String getSupplierCode() {
+        return supplierCode;
+    }
+
+    public void setSupplierCode(String supplierCode) {
+        this.supplierCode = supplierCode;
+    }
+
+    @Override
+    public String toString() {
+        return "EntryOrder{" +
+                "entryOrderCode='" + entryOrderCode + '\'' +
+                ", ownerCode='" + ownerCode + '\'' +
+                ", warehouseCode='" + warehouseCode + '\'' +
+                ", entryOrderId='" + entryOrderId + '\'' +
+                ", entryOrderType='" + entryOrderType + '\'' +
+                ", outBizCode='" + outBizCode + '\'' +
+                ", confirmType=" + confirmType +
+                ", status='" + status + '\'' +
+                ", operateTime='" + operateTime + '\'' +
+                ", remark='" + remark + '\'' +
+                ", supplierCode='" + supplierCode + '\'' +
+                '}';
     }
 }

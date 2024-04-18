@@ -7,6 +7,7 @@ import java.util.List;
 public class MobileEcOrderItemBo {
     private String orderItemId;
     private String skuId;
+    private String itemCode;
     private String skuName;
     private String unitName;
     private int qty;
@@ -20,6 +21,14 @@ public class MobileEcOrderItemBo {
 
     public void setOrderItemId(String orderItemId) {
         this.orderItemId = orderItemId;
+    }
+
+    public String getItemCode() {
+        return itemCode;
+    }
+
+    public void setItemCode(String itemCode) {
+        this.itemCode = itemCode;
     }
 
     public String getSkuId() {
@@ -76,5 +85,19 @@ public class MobileEcOrderItemBo {
 
     public void setBatchs(List<OrderItemBatchBo> batchs) {
         this.batchs = batchs;
+    }
+
+    @Override
+    public String toString() {
+        return "MobileEcOrderItemBo{" +
+                "orderItemId='" + orderItemId + '\'' +
+                ", skuId='" + skuId + '\'' +
+                ", skuName='" + skuName + '\'' +
+                ", unitName='" + unitName + '\'' +
+                ", qty=" + qty +
+                ", orderQty=" + orderQty +
+                ", actualPriceSubTotal='" + actualPriceSubTotal + '\'' +
+                ", batchs=" + batchs +
+                '}';
     }
 }

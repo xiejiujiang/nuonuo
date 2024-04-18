@@ -22,90 +22,93 @@ public class Skd extends BaseRowModel {
     private String saledate;//销售日期
 
     @ExcelProperty(index = 5)
-    private String sacode;//销货单单号
+    private String productionate;
 
     @ExcelProperty(index = 6)
-    private String ddmemo;//订单备注
+    private String sacode;//销货单单号
 
     @ExcelProperty(index = 7)
-    private String kehucode;
+    private String ddmemo;//订单备注
 
     @ExcelProperty(index = 8)
-    private String kehuname;
+    private String kehucode;
 
     @ExcelProperty(index = 9)
-    private String jskehucode;
+    private String kehuname;
 
     @ExcelProperty(index = 10)
-    private String jskehuname;
+    private String jskehucode;
 
     @ExcelProperty(index = 11)
-    private String inventorycode;
+    private String jskehuname;
 
     @ExcelProperty(index = 12)
-    private String inventoryname;
+    private String inventorycode;
 
     @ExcelProperty(index = 13)
-    private String fudanwei;
+    private String inventoryname;
 
     @ExcelProperty(index = 14)
-    private String zhudanwei;
+    private String fudanwei;
 
     @ExcelProperty(index = 15)
-    private String salenumbersfu;
+    private String zhudanwei;
 
     @ExcelProperty(index = 16)
-    private String salenumberszhu;
+    private String salenumbersfu;
 
     @ExcelProperty(index = 17)
-    private String saleprice;
+    private String salenumberszhu;
 
     @ExcelProperty(index = 18)
-    private String saleamount;
+    private String saleprice;
 
     @ExcelProperty(index = 19)
-    private String tuinumberfu;
+    private String saleamount;
 
     @ExcelProperty(index = 20)
-    private String tuinumberzhu;
+    private String tuinumberfu;
 
     @ExcelProperty(index = 21)
-    private String tuiamount;
+    private String tuinumberzhu;
 
     @ExcelProperty(index = 22)
-    private String factsalenumberfu;
+    private String tuiamount;
 
     @ExcelProperty(index = 23)
-    private String factsalenumberzhu;
+    private String factsalenumberfu;
 
     @ExcelProperty(index = 24)
-    private String factsaleamount;
+    private String factsalenumberzhu;
 
     @ExcelProperty(index = 25)
-    private String hexiaoamount;
+    private String factsaleamount;
 
     @ExcelProperty(index = 26)
-    private String zherangamount;
+    private String hexiaoamount;
 
     @ExcelProperty(index = 27)
-    private String shoukdate;
+    private String zherangamount;
 
     @ExcelProperty(index = 28)
-    private String shoukamount;
+    private String shoukdate;
 
     @ExcelProperty(index = 29)
-    private String jscode;
+    private String shoukamount;
 
     @ExcelProperty(index = 30)
-    private String jsname;
+    private String jscode;
 
     @ExcelProperty(index = 31)
-    private String bankname;
+    private String jsname;
 
     @ExcelProperty(index = 32)
-    private String shoukmemo;
+    private String bankname;
 
     @ExcelProperty(index = 33)
+    private String shoukmemo;
+
+    @ExcelProperty(index = 34)
     private String mobile;
 
     public String getSsqd() {
@@ -210,6 +213,14 @@ public class Skd extends BaseRowModel {
 
     public void setInventoryname(String inventoryname) {
         this.inventoryname = inventoryname;
+    }
+
+    public String getProductionate() {
+        return productionate;
+    }
+
+    public void setProductionate(String productionate) {
+        this.productionate = productionate;
     }
 
     public String getFudanwei() {
@@ -396,6 +407,7 @@ public class Skd extends BaseRowModel {
                 ", jskehuname='" + jskehuname + '\'' +
                 ", inventorycode='" + inventorycode + '\'' +
                 ", inventoryname='" + inventoryname + '\'' +
+                ", productionate='" + productionate + '\'' +
                 ", fudanwei='" + fudanwei + '\'' +
                 ", zhudanwei='" + zhudanwei + '\'' +
                 ", salenumbersfu='" + salenumbersfu + '\'' +

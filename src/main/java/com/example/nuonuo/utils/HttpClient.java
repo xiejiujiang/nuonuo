@@ -331,8 +331,10 @@ public class HttpClient {
 
     /**
      * POST---有参测试(普通参数)
+     * 美团要求！ 技术合作中心业务接口，目前只支持HTTP POST一种请求方式。
+     * 指定Body Content-Type为：application/x-www-form-urlencoded
+     * Post请求时，所有参数均通过表单传递，请勿将请求参数放到Query参数中。
      *
-     * @date
      */
     public static String doPostTestFour(String url,Map<String,String> map) {
         String result = "";
@@ -352,7 +354,7 @@ public class HttpClient {
         System.out.println("请求 URL == " + url+ "&" + params);
         HttpPost httpPost = new HttpPost(url + "&" + params);
         // 设置ContentType(注:如果只是传普通参数的话,ContentType不一定非要用application/json)
-        httpPost.setHeader("Content-Type", "application/json;charset=utf8");
+        httpPost.setHeader("Content-Type", "application/x-www-form-urlencoded");
         // 响应模型
         CloseableHttpResponse response = null;
         try {
@@ -397,6 +399,7 @@ public class HttpClient {
         HttpPost httpPost = new HttpPost(url);
         // 我这里利用阿里的fastjson，将Object转换为json字符串;(需要导入com.alibaba.fastjson.JSON包)
         String jsonString = JSONObject.toJSONString(tccg);
+        System.out.println("访问天财采购入库接口的参数内容是:" + jsonString);
         StringEntity entity = new StringEntity(jsonString, "UTF-8");
         // post请求是将参数放在请求体里面传过去的;这里将entity放入post请求体中
         httpPost.setEntity(entity);
@@ -716,5 +719,53 @@ public class HttpClient {
             }
             return  reslut;
         }
+    }
+
+
+
+    public static String MeiTuansendPostRequest(String url, Map<String, String> params) throws IOException {
+        URL urlObject = new URL(url);
+        HttpURLConnection connection = (HttpURLConnection) urlObject.openConnection();
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
+        connection.setDoOutput(true);
+
+        String requestBody = buildRequestBody(params);
+        try (OutputStream outputStream = connection.getOutputStream()) {
+            outputStream.write(requestBody.getBytes());
+        }
+        int statecode = connection.getResponseCode();
+        if(200 == statecode){
+            try (InputStream inputStream = connection.getInputStream();
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                reader.close();
+                return response.toString();
+            }
+        }else{
+            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream(),"UTF-8"));
+            StringBuilder response = new StringBuilder();
+            String line = "";
+            while ((line = in.readLine()) != null) {
+                response.append(line);
+            }
+            in.close();
+            return response.toString();
+        }
+    }
+
+    public static String buildRequestBody(Map<String, String> params) throws UnsupportedEncodingException {
+        StringBuilder requestBody = new StringBuilder();
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            if (requestBody.length() != 0) {
+                requestBody.append("&");
+            }
+            requestBody.append(entry.getKey()).append("=").append(entry.getValue());
+        }
+        return requestBody.toString();
     }
 }

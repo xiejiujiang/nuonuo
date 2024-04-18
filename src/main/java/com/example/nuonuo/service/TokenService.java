@@ -1,6 +1,10 @@
 package com.example.nuonuo.service;
 
 
+import com.example.nuonuo.entity.Meituan.Caigou.ScmChainCreateStockPurchaseInRequest;
+import com.example.nuonuo.entity.Meituan.Chaidan.MeituanPeisongChaidanDTO;
+import com.example.nuonuo.entity.Meituan.MeituanPeiSong;
+import com.example.nuonuo.entity.Meituan.PeisongFaHuo.ScmChainDeliveryDeliveryOrder1Request;
 import com.example.nuonuo.entity.hongren.chukufahuomix.Request;
 import com.example.nuonuo.entity.mida.batchcukundtail.BatchSkuCukun;
 import com.example.nuonuo.entity.mida.chukureturn.OrderDetailsRespose;
@@ -10,6 +14,7 @@ import com.example.nuonuo.entity.mida.kucun.Midack;
 import com.example.nuonuo.entity.mida.rukureturn.InboundStockInfo;
 import com.example.nuonuo.entity.tiancai.*;
 import com.example.nuonuo.entity.tiancaicg.Tccg;
+import com.example.nuonuo.entity.tiancaichukureturn.TcZXCHUKUReturn;
 import com.example.nuonuo.entity.tiancaiqitadd.TcWXZXresult;
 import com.jiujin.scm.open.sdk.bo.BatchSkuStockInfo;
 import com.jiujin.scm.open.sdk.bo.CreatedOrderBo;
@@ -17,12 +22,13 @@ import com.jiujin.scm.open.sdk.bo.OrderInfo;
 import com.jiujin.scm.open.sdk.bo.SkuStockInfo;
 
 import java.util.List;
+import java.util.Map;
 
 public interface TokenService {
 
-    public String refreshToken();
+    public String refreshTToken();
 
-    public String refreshEToken();
+    public String refreshMeiTuanToken();
 
     // --------------------------- 天财接口 --------------------------------- //
 
@@ -50,14 +56,17 @@ public interface TokenService {
     //WMS发货后，回传 实发 数量给天财的 中心出库单(统配出和外销出回传数量的接口)
     public String updateTCchukuReturn(TcchukuReturn tcchukuReturn);
 
+    //根据 天财反馈到中台的 中心出库单（统配+外销）进行 下发WMS发货出库
+    public String addWMSfahuochukuddByTCdd(TcZXCHUKUReturn tcZXCHUKUReturn)throws Exception;
 
     // --------------------------- 弘人WMS接口 --------------------------------- //
     //组装成 弘人WMS 的 出库发货mix 参数对象后，再调用接口 进行 发货出库mix
     public String addHongrenFaHuoChuku(Request req);
 
-    public String addHongrenRuKuToTCMT(String xml);//根据弘人WMS返回的入库数据 进行入库（天财/美团？）
+    public String addHongrenRuKuToTCMT(String xml)throws Exception;//根据弘人WMS返回的入库数据 进行入库（天财/美团？）
 
     public String addHongrenChuKuToTCMT(String xml);//根据弘人WMS返回的出库确认数据，反写到 天财 中心出库单？ 美团 配送单？
+
 
     //--------------------------- 米大WMS接口 --------------------------------- //
     //发货订单创建接口
@@ -72,7 +81,19 @@ public interface TokenService {
     //批量根据skuId获取库存信息
     public BatchSkuCukun getBatchSkuStockInfo(BatchSkuStockInfo batchSkuStockInfo);
 
-    public String addMiDaChuKuToTCMT(List<OrderDetailsRespose> midachukureturn);
+    public String addMiDaChuKuToTCMT(OrderDetailsRespose midachukureturn)throws Exception;
 
-    public String addMiDaRuKuToTCMT(InboundStockInfo midaruku);
+    public String addMiDaRuKuToTCMT(InboundStockInfo midaruku)throws Exception;
+
+    //--------------------------- 美团接口 --------------------------------- //
+    //总部-采购入库：https://developer.meituan.com/docs/api/rms-scmplus-inventory-api-v1-chain-stockPurchaseIn-create
+    public String addMeituanRuku(ScmChainCreateStockPurchaseInRequest cg, String signKey,String developerId, String appAuthToken);
+
+    //配送发货单：https://developer.meituan.com/docs/api/rms-scmplus-distribution-api-v1-chain-deliveryorder-delivery
+    public String addMeituanPeisongFaHuo(ScmChainDeliveryDeliveryOrder1Request dv, String signKey, String developerId, String appAuthToken);
+
+    //根据 美团反馈到中台的 配送单 进行 下发WMS发货出库
+    public String addWMSfahuochukuddByMTdd(MeituanPeiSong meituanPeiSong)throws Exception;
+
+    public String addMeituanPeisongChaiDan(MeituanPeisongChaidanDTO chaidanDTO, String signKey, String developerId, String appAuthToken);
 }

@@ -5,12 +5,15 @@ import com.alibaba.excel.metadata.Sheet;
 import com.alibaba.excel.support.ExcelTypeEnum;
 import com.alibaba.fastjson.JSONObject;
 import com.example.nuonuo.SAsubscribe.SACsubJsonRootBean;
+import com.example.nuonuo.entity.Meituan.MeituanPeiSong;
 import com.example.nuonuo.entity.Skd;
 import com.example.nuonuo.entity.mida.chukureturn.OrderDetailsRespose;
 import com.example.nuonuo.entity.mida.rukureturn.InboundStockInfo;
 import com.example.nuonuo.entity.mida.rukureturn.WarehouseStockBo;
 import com.example.nuonuo.entity.shoukd.*;
+import com.example.nuonuo.entity.tiancaichukureturn.TcZXCHUKUReturn;
 import com.example.nuonuo.mapper.orderMapper;
+import com.example.nuonuo.mapper.zhongtaiMapper;
 import com.example.nuonuo.saentity.JsonRootBean;
 import com.example.nuonuo.saentity.SaleDeliveryDetails;
 import com.example.nuonuo.service.TokenService;
@@ -27,6 +30,7 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
@@ -41,17 +45,26 @@ public class TokenController {
     private orderMapper orderMapper;
 
     @Autowired
+    private com.example.nuonuo.mapper.zhongtaiMapper zhongtaiMapper;
+
+    @Autowired
     private TokenService tokenService;
 
     //这个里面 主要 用来 接受 code ,刷新 token ，更新对应的数据库
     @RequestMapping(value="/recode", method = {RequestMethod.GET,RequestMethod.POST})
     public @ResponseBody String recode(HttpServletRequest request, HttpServletResponse response) {
-        LOGGER.info("------------------- 正式OAuth回调地址 -------------------");
+        LOGGER.info("------------------- 美团 回调地址 访问成功 ！ -------------------");
         String code = request.getParameter("code");
+        //String sign = request.getParameter("sign");
+        //String developerId = request.getParameter("developerId");
+        //String businessId = request.getParameter("businessId");
         //第一次授权后，会有这个code,立刻调用 一次 授权码换token接口 ，拿到完整的 token 相关信息，并写入数据库。
         //3月17日思考： 暂时不用接口来访问，直接在线访问后 拿到第一次的数据，并 复制 填入数据库表中接口（后续定时任务来更新）
         String ss = orderMapper.getDBtest();
-        LOGGER.info("DB-TEST ---- 访问成功！----- " + ss );
+        if( ss != null && !"".equals(ss)){//说明数据库链接成功！
+            LOGGER.error("------------------- 数据库链接成功 ,code == " + ss);
+        }
+        LOGGER.error("------------------- 美团 回调地址 code : " + code);
         return code;
     }
 
@@ -341,34 +354,13 @@ public class TokenController {
 
     // ------------------------------------------------  以下是业务接口 -----------------------------------------------------//
 
-    //扫码后，打开的单据信息确认页面。
-    @RequestMapping(value="/openRecode", method = {RequestMethod.GET,RequestMethod.POST})
-    public ModelAndView openRecode(HttpServletRequest request, HttpServletResponse response) {
+    //测试JSP页面配置是否成功
+    @RequestMapping(value="/testmodel", method = {RequestMethod.GET,RequestMethod.POST})
+    public ModelAndView testmodel(HttpServletRequest request, HttpServletResponse response) {
         ModelAndView mav = new ModelAndView();
-        LOGGER.info("-------------------  扫码后，打开的单据信息确认页面  ----------------------");
-        String code = request.getParameter("code"); // 零售单的单号
-        Map<String,Object> redetailMap = orderMapper.getRedetailMap(code);
-
-        /*Map<String,Object> redetailMap = new HashMap<String,Object>();
-        redetailMap.put("storename","上海九亭店");
-        redetailMap.put("code","RE-LS-0322");
-        redetailMap.put("voucherdate","2023-03-22 09:32:14");
-        redetailMap.put("amount","6677.00");*/
-
-        mav.addObject("redetailMap",redetailMap);
         mav.setViewName("openRecode");
         return mav;
     }
-
-    //确认无误后，点击确认，进入 周经理的excel 导入页面
-    @RequestMapping(value="/goExcel", method = {RequestMethod.GET,RequestMethod.POST})
-    public ModelAndView goCommit(HttpServletRequest request, HttpServletResponse response) {
-        ModelAndView mav = new ModelAndView();
-        LOGGER.info("-------------------  确认无误后，点击确认，进入 周经理的excel 导入页面  ----------------------");
-        mav.setViewName("excel");
-        return mav;
-    }
-
 
     //提交开票信息 到  诺诺网 ， 并返回结果
     @RequestMapping(value="/commitNuonuo", method = {RequestMethod.GET,RequestMethod.POST})
@@ -466,9 +458,20 @@ public class TokenController {
 
     // --------------------------------------------------------------------------------------------//
 
+    //确认无误后，点击确认，进入 周经理的excel 导入页面
+    @RequestMapping(value="/goExcel", method = {RequestMethod.GET,RequestMethod.POST})
+    public ModelAndView goCommit(HttpServletRequest request, HttpServletResponse response) {
+        ModelAndView mav = new ModelAndView();
+        LOGGER.info("-------------------  确认无误后，点击确认，进入 周经理的excel 导入页面  ----------------------");
+        mav.setViewName("excel");
+        return mav;
+    }
+
+
     // 周经理-导入excel 解析数据，生成 收款单 核销 销售发票明细
     @RequestMapping(value="/createSK", method = {RequestMethod.GET,RequestMethod.POST})
     public @ResponseBody String createSK(@RequestParam(value = "file") MultipartFile file, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        LOGGER.info("-------------------  提交了excel表格到后台，马上解析数据！  ----------------------");
         String daoruRes = "";
         InputStream inputStream = file.getInputStream();
         ExcelListener listener = new ExcelListener();
@@ -478,12 +481,14 @@ public class TokenController {
         excelReader.read(sheet);
         List<Skd> ptlist = new ArrayList<Skd>();//最终用来写入的数据
         List<Object> list = listener.getDatas();//当前从上传的excel中获取的数据
+        int excelHangNumbers = list.size();//导入的excel 总共 多少 行！
         for(Object oo : list){
             Skd skd = (Skd)oo;
             ptlist.add(skd);
         }
         //拿到所有数据的这个  ptlist  然后匹配发票明细。折扣金额
         Map<String,String> jsonMap = new HashMap<String,String>();
+        int dataErrorNumbers = 0; //没有发票的行数
         for(Skd skd : ptlist){
             String mobile = skd.getMobile();//导入人的手机号，最后一列！
             String drjq = skd.getShoukdate();//收款日期作为单据日期
@@ -499,17 +504,26 @@ public class TokenController {
             String skAmount = skd.getShoukamount();
             String beizhu = skd.getShoukmemo();
             String inventorycode = skd.getInventorycode();//商品编码
-            String weiyi = kehucode+drjq+","+mobile;//因为 同一个客户的同一个日期的同一个制单人，  一定只对应一个收款单！
-            Map<String,Object> fapMap = orderMapper.getfapiaoMapBySA(sacode,inventorycode);
+            String ProductionDate = skd.getProductionate();//实际上 填的 是批号哈，SQL也改了的。
+            String factsaleamount = skd.getFactsaleamount();//实际销售金额
+            String weiyi = sacode+","+kehucode+drjq+","+mobile;//因为 同一个客户的同一个日期的同一个制单人，  一定只对应一个收款单！
+            LOGGER.info("sacode == " + sacode + ",inventorycode == " + inventorycode + ",ProductionDate == " + ProductionDate);
+            Map<String,Object> fapMap = new HashMap<String,Object>();
+            if(ProductionDate != null && !"".equals(ProductionDate)){
+                fapMap = orderMapper.getfapiaoMapBySA(sacode,inventorycode,ProductionDate,factsaleamount);
+            }else{//说明 此行 是 费用类的商品，就没有批号！
+                fapMap = orderMapper.getfapiaoMapBySANoBath(sacode,inventorycode,factsaleamount);
+            }
             if(fapMap == null || fapMap.get("code") == null){//说明没有生成发票
-                daoruRes = daoruRes + "销货单号："+sacode +" 没有对应发票，核销失败！";
+                dataErrorNumbers = dataErrorNumbers + 1;
+                daoruRes = daoruRes + "销货单号："+sacode +" 没有对应发票，核销失败！</br>";
             }else{//说明有发票
                 //LOGGER.info("xxx === " + mobile+drjq+kehucode+sacode+saAmount+hexiaoAmount+zherangAmount+jsCode+bankName+skAmount+beizhu+weiyi);
                 if(jsonMap.get(weiyi) == null || "".equals(jsonMap.get(weiyi))){
                     SKRoot skRoot = new SKRoot();
                     Dto dtoo = new Dto();
                     dtoo.setVoucherDate(drjq);
-                    dtoo.setExternalCode(Md5.md5(weiyi));
+                    dtoo.setExternalCode(Md5.md5(weiyi+System.currentTimeMillis()));
                     Partner patt = new Partner();
                     patt.setCode(kehucode);
                     dtoo.setPartner(patt);
@@ -519,8 +533,11 @@ public class TokenController {
                     VoucherState voucherState = new VoucherState();
                     voucherState.setCode("01");//自动审核通过
                     dtoo.setVoucherState(voucherState);
+                    dtoo.setExchangeRate(1);
                     dtoo.setIsReceiveFlag(true);//收款单
-                    dtoo.setOrigAllowances(zherangAmount);//折让金额
+                    if(zherangAmount != null && !"".equals(zherangAmount) && Float.valueOf(zherangAmount) != 0){
+                        dtoo.setOrigAllowances(zherangAmount);//折让金额
+                    }
                     dtoo.setIsPartCancel(true);//明细核销指定结款金额
 
                     ArapMultiSettleDetails arapMultiSettleDetails = new ArapMultiSettleDetails();
@@ -543,7 +560,9 @@ public class TokenController {
                     details.setVoucherCode(fapMap.get("code").toString());// 对应 销售发票的 编号
                     details.setVoucherDetailID(Integer.valueOf(fapMap.get("detailId").toString()));// 对应 销售发票的 明细 主键 ID
                     details.setOrigCurrentAmount(Float.valueOf(skAmount)+Float.valueOf(zherangAmount));//核销金额 = 收款金额 + 折让金额
-                    details.setOrigAllowancesAmount(zherangAmount);
+                    if(zherangAmount != null && !"".equals(zherangAmount) && Float.valueOf(zherangAmount) != 0){
+                        details.setOrigAllowancesAmount(zherangAmount);
+                    }
                     List<Details> ldd = new ArrayList<Details>();
                     ldd.add(details);
                     dtoo.setDetails(ldd);
@@ -555,8 +574,16 @@ public class TokenController {
                 }else{
                     String json = jsonMap.get(weiyi);//已经存入的JSON
                     SKRoot skRoot1 = JSONObject.parseObject(json,SKRoot.class);
-                    Float zherangAmount1 = Float.valueOf(skRoot1.getDto().getOrigAllowances())+Float.valueOf(zherangAmount);
-                    skRoot1.getDto().setOrigAllowances(""+zherangAmount1);
+                    Float skr1old = 0f;
+                    if(skRoot1.getDto() == null || skRoot1.getDto().getOrigAllowances() == null){
+                        skr1old = 0f;
+                    }else{
+                        skr1old = Float.valueOf(skRoot1.getDto().getOrigAllowances());
+                    }
+                    Float zherangAmount1 = skr1old+Float.valueOf(zherangAmount);
+                    if(zherangAmount1 != null && !"".equals(zherangAmount1) && Float.valueOf(zherangAmount1) != 0){
+                        skRoot1.getDto().setOrigAllowances(""+zherangAmount1);
+                    }
                     ArapMultiSettleDetails arapMultiSettleDetails1 = new ArapMultiSettleDetails();
                     SettleStyle settleStyle1 = new SettleStyle();
                     settleStyle1.setCode(jsCode);
@@ -575,7 +602,9 @@ public class TokenController {
                     details1.setVoucherDetailID(Integer.valueOf(fapMap.get("detailId").toString()));// 对应 销售发票的 明细 主键 ID
                     details1.setOrigCurrentAmount(Float.valueOf(skAmount)+Float.valueOf(zherangAmount));//核销金额 = 收款金额 + 折让金额
                     //details1.setOrigCurrentAmount(Float.valueOf(hexiaoAmount));//核销金额
-                    details1.setOrigAllowancesAmount(zherangAmount);
+                    if(zherangAmount != null && !"".equals(zherangAmount) && Float.valueOf(zherangAmount) != 0){
+                        details1.setOrigAllowancesAmount(zherangAmount);
+                    }
                     skRoot1.getDto().getDetails().add(details1);
                     Gson gson = new Gson();
                     String json1 = gson.toJson(skRoot1);//组装好的JSONString
@@ -587,12 +616,15 @@ public class TokenController {
         //周经理 调用收款单API接口
         //循环迭代 jsonMap
         Iterator<Map.Entry<String, String>> iterator = jsonMap.entrySet().iterator();
+        int safailNumbers = 0;
         while (iterator.hasNext()) {
             Map.Entry<String, String> entry = iterator.next();
             String weiyi = entry.getKey();
+            String sacode = weiyi.substring(0,weiyi.indexOf(","));
             String mobile = weiyi.substring(weiyi.lastIndexOf(",")+1,weiyi.length());
-            String appKey = "JI5L5ZZe";//写死！因为 一个账套内  只有一个！！
-            Map<String,String> tmap = orderMapper.getDBAllOrgListByappKeyMobile(appKey,mobile);
+            //String appKey = "fwXAfa0q";//写死！因为 一个账套内  只有一个！！  fwXAfa0q  002 9997 ////  JI5L5ZZe 001 9998
+            Map<String,String> tmap = orderMapper.getDBAllOrgListByappKeyMobile(mobile);
+            String appKey = tmap.get("AppKey").toString();
             String value = entry.getValue();
             LOGGER.error("---- 调用收款单的JSON == " + value);
             String rrr = HttpClient.HttpPost("/tplus/api/v2/ReceivePaymentVoucherOpenApi/NewCreate",
@@ -604,13 +636,14 @@ public class TokenController {
             JSONObject rrrr = JSONObject.parseObject(rrr);
             String recode = rrrr.getString("code");
             if(!"0".equals(recode)){//说明创建失败了！
-                daoruRes = daoruRes + rrrr.getString("message");
+                safailNumbers = safailNumbers + 1;
+                daoruRes = daoruRes + "销货单单号："+sacode + " 失败的原因是："+ rrrr.getString("message") + "</br>";
             }
         }
         if("".equals(daoruRes)){
             return "导入成功！ 请刷新后查询收款单！";
         }else{
-            return daoruRes;
+            return daoruRes + "\n" + "总共失败了 " + safailNumbers + " 单";
         }
     }
 
@@ -626,7 +659,10 @@ public class TokenController {
             while ((line = reader.readLine()) != null) {
                 xmlData.append(line);
             }
-            LOGGER.error("天财 反馈的 String == " + xmlData.toString());
+            LOGGER.error(" ---------- 天财 反馈的 中心出库单（统配+外销）String == " + xmlData.toString());
+            TcZXCHUKUReturn tcZXCHUKUReturn = JSONObject.parseObject(xmlData.toString(),TcZXCHUKUReturn.class);
+            //下发给弘人WMS 或者 米大WMS 进行 发货出库
+            String fhckreturn = tokenService.addWMSfahuochukuddByTCdd(tcZXCHUKUReturn);
         } catch (Exception e) {
             e.printStackTrace();
             res = "{\"code\":\"9001\",\"message\":\"接收异常，需要重新推送！\"}";
@@ -668,7 +704,7 @@ public class TokenController {
                 String rukuresult = tokenService.addHongrenChuKuToTCMT(xmlData.toString());
             }
             res = "<?xml version=\"1.0\" encoding=\"utf-8\"?><response><flag>success</flag><code>0000</code><message>接收成功</message></response>";
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             res = "<?xml version=\"1.0\" encoding=\"utf-8\"?><response><flag>failure</flag><code>4001</code><message>接收失败，请重试</message></response>";
         }
@@ -686,14 +722,14 @@ public class TokenController {
             while ((line = reader.readLine()) != null) {
                 xmlData.append(line);
             }
-            LOGGER.error("米大 反馈的 String == " + xmlData.toString());
+            LOGGER.error("------------米大推送的String == " + xmlData.toString());
             JSONObject job = JSONObject.parseObject(xmlData.toString());
             String sign = job.getString("sign");
             String message_type = job.getString("message_type");
             String app_key = job.getString("app_key");
             String message = job.getString("message");
             if("ORDER_CHANGE".equals(message_type)){//ORDER_CHANGE:订单信息变更,就是米大出库发货
-                List<OrderDetailsRespose> midachukureturn = JSONObject.parseArray(message,OrderDetailsRespose.class);
+                OrderDetailsRespose midachukureturn = JSONObject.parseObject(message,OrderDetailsRespose.class);
                 String rukuresult = tokenService.addMiDaChuKuToTCMT(midachukureturn);
             }
             if("STOCK_INBOUND".equals(message_type)){//STOCK_INBOUND:库存入库
@@ -701,7 +737,36 @@ public class TokenController {
                 String rukuresult = tokenService.addMiDaRuKuToTCMT(midaruku);
             }
             res = "{\"code\":\"0000\",\"message\":\"success\"}";
-        } catch (IOException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
+            res = "{\"code\":\"9001\",\"message\":\"接收异常，需要重新推送！\"}";
+        }
+        return res;
+    }
+
+
+    // --------------------------------  美团 配送单 回调------------------------------//
+    @RequestMapping(value="/meituandy", method = {RequestMethod.GET,RequestMethod.POST})
+    public @ResponseBody String meituanDy(HttpServletRequest request, HttpServletResponse response) {
+        String res = "";
+        try {
+            String reqMessage = request.getParameter("message");
+            StringBuilder xmlData = new StringBuilder();
+            BufferedReader reader = request.getReader();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                xmlData.append(line);
+            }
+            String decodeXmlStr = URLDecoder.decode(reqMessage, "UTF-8");
+            LOGGER.error("-----------美团推送配送单信息:" + decodeXmlStr);
+            MeituanPeiSong meituanPeiSong = JSONObject.parseObject(decodeXmlStr,MeituanPeiSong.class);
+            //判断 仓库，调用 弘人./ 米大. 进行订单发货出库了！！  下发给弘人WMS 或者 米大WMS 进行 发货出库
+            int optype = meituanPeiSong.getOpType();// 1-创建、2-编辑、3-发货、4-撤销发货、5-删除、6-重推
+            if(optype == 1){
+                tokenService.addWMSfahuochukuddByMTdd(meituanPeiSong);
+            }
+            res = "{\"code\":\"0000\",\"message\":\"success\"}";
+        } catch (Exception e) {
             e.printStackTrace();
             res = "{\"code\":\"9001\",\"message\":\"接收异常，需要重新推送！\"}";
         }

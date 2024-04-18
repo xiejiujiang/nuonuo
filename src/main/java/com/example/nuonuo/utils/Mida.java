@@ -1,11 +1,12 @@
 package com.example.nuonuo.utils;
 
 
-import com.alibaba.fastjson.JSONObject;
-import com.example.nuonuo.entity.mida.rukureturn.WarehouseStockBo;
 import com.jiujin.scm.open.sdk.StringUtils;
+import com.jiujin.scm.open.sdk.bo.CreatedOrderBo;
 import com.jiujin.scm.open.sdk.client.MidaOpenClient;
 import com.jiujin.scm.open.sdk.client.OpenClient;
+import com.jiujin.scm.open.sdk.request.CreatedOrderRequest;
+import com.jiujin.scm.open.sdk.response.GetBatchOrderResponse;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -24,20 +25,28 @@ public class Mida {
     public static void main(String[] args) throws Exception{
 
         //创建发货单
-        /*CreatedOrderRequest request = new CreatedOrderRequest();
         CreatedOrderBo orderInfo = new CreatedOrderBo();
-        orderInfo.setCustomerOrderNo("CD001111111");
-        orderInfo.setAddress("天府一街369号");
-        List<CreatedOrderBo.OrderItem> items = new ArrayList<>();
-        CreatedOrderBo.OrderItem item = new CreatedOrderBo.OrderItem();
-        item.setQty(10);
-        item.setSkuId("1694591762138746882");
-        items.add(item);
-        orderInfo.setOrderItems(items);
+        String address = "四川省成都市锦江区罗妈砂锅九眼桥店一环路东五段46号附 18号";
+        orderInfo.setAddress(address);
+        orderInfo.setCustomerOrderNo("PS2404100005");
+        List<CreatedOrderBo.OrderItem> orderItems = new ArrayList<CreatedOrderBo.OrderItem>();
+
+        CreatedOrderBo.OrderItem orderItem1 = new CreatedOrderBo.OrderItem();
+        orderItem1.setItemCode("ZBWP0137");
+        orderItem1.setQty(456);
+        orderItems.add(orderItem1);
+
+        CreatedOrderBo.OrderItem orderItem2 = new CreatedOrderBo.OrderItem();
+        orderItem2.setItemCode("ZBWP0142");
+        orderItem2.setQty(123);
+        orderItems.add(orderItem2);
+
+        orderInfo.setOrderItems(orderItems);
+        CreatedOrderRequest request = new CreatedOrderRequest();
         request.setOrderBo(orderInfo);
-        GetBatchOrderResponse response = client.execute(request);
-        System.out.println("response == " + response.toString());
-        Assert.notNull(response.getPayload());*/
+        GetBatchOrderResponse response = Mida.client.execute(request);
+        String responseBody = response.getBody();
+        System.out.println("--------------- 米大的订单下推后返回结果是： " + responseBody);
 
         // 获取订单详情
         /*GetOrderInfoRequest request = new GetOrderInfoRequest();
@@ -65,10 +74,10 @@ public class Mida {
 
 
 
-        String message = "[{\"stockId\":\"1694594374825234433\",\"availableQty\":1078,\"orderReservedQty\":20,\"transReservedQty\":1,\"notForSaleReservedQty\":0,\"warehouseCode\":\"CD01\",\"skuId\":\"1694591762138746882\",\"skuName\":\"四川口口脆\",\"status\":\"ON_SHELF\",\"batchList\":null}]";
+        /*String message = "[{\"stockId\":\"1694594374825234433\",\"availableQty\":1078,\"orderReservedQty\":20,\"transReservedQty\":1,\"notForSaleReservedQty\":0,\"warehouseCode\":\"CD01\",\"skuId\":\"1694591762138746882\",\"skuName\":\"四川口口脆\",\"status\":\"ON_SHELF\",\"batchList\":null}]";
         List<WarehouseStockBo> midaruku = JSONObject.parseArray(message,WarehouseStockBo.class);
         System.out.println(midaruku.size());
-        System.out.println(midaruku.get(0).getSkuName());
+        System.out.println(midaruku.get(0).getSkuName());*/
 
     }
 

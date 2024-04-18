@@ -3,7 +3,11 @@ package com.example.nuonuo.entity.mida.fahuoddct;
 import com.example.nuonuo.entity.mida.chukureturn.MobileEcOrderItemBo;
 import com.example.nuonuo.entity.mida.dddetail.OrderStatus;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class Fhdd {
+    private Long id;
     /**
      * 地址
      */
@@ -20,7 +24,8 @@ public class Fhdd {
      * 司机电话
      */
     private String driverPhone;
-    private MobileEcOrderItemBo[] items;
+
+    private List<MobileEcOrderItemBo> items;
     /**
      * 订单状态
      */
@@ -46,6 +51,15 @@ public class Fhdd {
      */
     private String receiver;
 
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getAddress() { return address; }
     public void setAddress(String value) { this.address = value; }
 
@@ -58,8 +72,13 @@ public class Fhdd {
     public String getDriverPhone() { return driverPhone; }
     public void setDriverPhone(String value) { this.driverPhone = value; }
 
-    public MobileEcOrderItemBo[] getItems() { return items; }
-    public void setItems(MobileEcOrderItemBo[] value) { this.items = value; }
+    public List<MobileEcOrderItemBo> getItems() {
+        return items;
+    }
+
+    public void setItems(List<MobileEcOrderItemBo> items) {
+        this.items = items;
+    }
 
     public OrderStatus getOrderStatus() { return orderStatus; }
     public void setOrderStatus(OrderStatus value) { this.orderStatus = value; }

@@ -36,4 +36,15 @@ public class OrderItemBatchBo {
 
     public String getStockBatchId() { return stockBatchId; }
     public void setStockBatchId(String value) { this.stockBatchId = value; }
+
+    @Override
+    public String toString() {
+        return "OrderItemBatchBo{" +
+                "expiredAt='" + expiredAt + '\'' +
+                ", producedAt='" + producedAt + '\'' +
+                ", qty='" + qty + '\'' +
+                ", shelfLifeDays='" + shelfLifeDays + '\'' +
+                ", stockBatchId='" + stockBatchId + '\'' +
+                '}';
+    }
 }

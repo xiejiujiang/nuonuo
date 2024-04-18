@@ -3,12 +3,24 @@
 <mapper namespace="com.example.nuonuo.mapper.orderMapper">
 
     <select id="getDBtest" resultType="java.lang.String">
-        select access_token from XXX_code_token
+        select code from sky_meituan_code_token
+    </select>
+
+    <select id="getDBTAllOrgList" resultType="java.util.Map">
+        select id_num,code,AppKey,AppSecret,access_token,refresh_token,user_id,org_id,app_name,update_time from XXX_code_token
     </select>
 
     <select id="getDBAllOrgList" resultType="java.util.Map">
-        select id_num,code,AppKey,AppSecret,access_token,refresh_token,user_id,org_id,app_name,update_time from XXX_code_token
+        select id_num,code,signKey,developerId,accessToken,refreshToken,developerId
+        from sky_meituan_code_token
     </select>
+
+    <select id="getSKVourcherStateByCode" resultType="java.lang.String" parameterType="java.lang.String">
+        select top 1
+              voucherstate
+        from ARAP_ReceivePayment where code = #{code}
+    </select>
+
 
     <select id="getDBAllOrgListByappKey" resultType="java.util.Map" parameterType="java.lang.String">
         select top 1
@@ -21,15 +33,21 @@
         select top 1
             id_num,code,AppKey,AppSecret,access_token,refresh_token,user_id,org_id,app_name,update_time
         from XXX_code_token
-        where AppKey = #{appKey} and mobile = #{mobile}
+        where mobile = #{mobile}
     </select>
 
     <update id="updateOrgToken" parameterType="java.util.Map">
+        update sky_meituan_code_token
+        set accessToken = #{accessToken},refreshToken = #{refreshToken},update_time = GETDATE()
+        where signKey = #{signKey} and developerId = #{developerId}
+    </update>
+
+
+    <update id="updateTOrgToken" parameterType="java.util.Map">
         update XXX_code_token
         set access_token = #{access_token},refresh_token = #{refresh_token},update_time = GETDATE()
         where org_id = #{org_id} and refresh_token = #{oldrefreshtoken}
     </update>
-
 
     <update id="updateEOrgToken" parameterType="java.util.Map">
         update XXX_Ecode_token
@@ -160,5 +178,16 @@
         where t1.code = #{sacode} and t1.id = t2.idSaleDeliveryDTO and t3.sourceVoucherCode = t1.code
         and t3.sourceVoucherDetailId = t2.id and t3.idSaleInvoiceDTO = t4.id
         and t2.idinventory = t5.id and t5.id = t3.idinventory and t5.code = #{inventorycode}
+        and t2.batch = #{ProductionDate} and t2.taxAmount = ${factsaleamount}
+    </select>
+
+    <select id="getfapiaoMapBySANoBath" parameterType="java.lang.String" resultType="java.util.Map">
+        select top 1
+        t4.code,t3.id as detailId   from
+        SA_SaleDelivery t1,SA_SaleDelivery_b t2,SA_SaleInvoice_b t3,SA_SaleInvoice t4,AA_inventory t5
+        where t1.code = #{sacode} and t1.id = t2.idSaleDeliveryDTO and t3.sourceVoucherCode = t1.code
+        and t3.sourceVoucherDetailId = t2.id and t3.idSaleInvoiceDTO = t4.id
+        and t2.idinventory = t5.id and t5.id = t3.idinventory and t5.code = #{inventorycode}
+        and t2.taxAmount = ${factsaleamount}
     </select>
 </mapper>

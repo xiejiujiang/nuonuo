@@ -33,7 +33,7 @@
                 导入表格前请仔细检查表格内容是否填写完整
             </div>
             <div style="position: absolute;margin-top: 79px;margin-left: 20px;background-color: #D9D9D9;width: 300px;height: 30px"></div>
-            <form method="POST" enctype="multipart/form-data" action="http://39.99.224.54:9998/nuonuo/token/createSK">
+            <form method="POST" enctype="multipart/form-data" action="http://39.99.224.54:9997/nuonuo/token/createSK">
                 <input type="file" name="file" style="display: none" id="upload"></input>
                 <input type="button" value="选择文件" style="cursor: pointer;height: 30px;width: 80px;position: absolute;margin-top: 10px;margin-left: 350px" onclick="test1();">
                 <input type="button" value="取消" style="cursor: pointer;height: 30px;width: 80px;position: absolute;margin-top: 10px;margin-left: 470px" onclick="clear1();">
@@ -99,7 +99,7 @@
                 //提交form表单
                 var formData = new FormData($( "#form2")[0]);
                 $.ajax({
-                    url: 'http://39.99.224.54:9998/nuonuo/token/createSK' ,
+                    url: 'http://39.99.224.54:9997/nuonuo/token/createSK' ,
                     type: 'POST',
                     data: formData,
                     async: false,

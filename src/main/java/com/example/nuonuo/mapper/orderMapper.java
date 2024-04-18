@@ -14,15 +14,23 @@ public interface orderMapper {
     String getDBtest();
 
     //返回数据库中 XXX_code_token 所有记录的 企业信息
+    List<Map<String,String>> getDBTAllOrgList();
+
+    //返回数据库中 meituan_code_token 所有记录的 企业信息
     List<Map<String,String>> getDBAllOrgList();
 
     //根据 appKey 返回数据库中 XXX_code_token 所有记录的 企业信息
     Map<String,String> getDBAllOrgListByappKey(String appKey);
 
-    Map<String,String> getDBAllOrgListByappKeyMobile(@Param("appKey")String appKey,@Param("mobile") String mobile);
+    Map<String,String> getDBAllOrgListByappKeyMobile(String mobile);
 
-    //调用refreshtoken 后更新数据库
+    String getSKVourcherStateByCode(String code);
+
+    //调用refreshtoken 后更新 美团 数据库
     void updateOrgToken(Map<String,String> updateMap);
+
+    //调用refreshtoken 后更 T+ 新数据库
+    void updateTOrgToken(Map<String,String> updateMap);
 
     void updateEOrgToken(Map<String,String> updateMap);
 
@@ -61,5 +69,8 @@ public interface orderMapper {
 
     String getXSFPbYCODECODE(String vourcherCode);
 
-    Map<String,Object> getfapiaoMapBySA(@Param("sacode")String sacode,@Param("inventorycode")String inventorycode);
+    Map<String,Object> getfapiaoMapBySA(@Param("sacode")String sacode,@Param("inventorycode")String inventorycode,@Param("ProductionDate")String ProductionDate,@Param("factsaleamount")String factsaleamount);
+
+    Map<String,Object> getfapiaoMapBySANoBath(@Param("sacode")String sacode,@Param("inventorycode")String inventorycode,@Param("factsaleamount")String factsaleamount);
+
 }

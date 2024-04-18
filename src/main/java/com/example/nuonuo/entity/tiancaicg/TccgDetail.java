@@ -3,7 +3,7 @@ package com.example.nuonuo.entity.tiancaicg;
 public class TccgDetail {
     private String assistUnit;
     private String inAssistAmount;
-    private int inStoreMoney;
+    private Float inStoreMoney;
     private boolean giftFlag;
     private int inBusAmount;
     private String batchCode;
@@ -14,7 +14,7 @@ public class TccgDetail {
     private int taxMoney;
     private String itemId;
     private String unitId;
-    private int busUnitPrice;
+    private Float busUnitPrice;
     private int sortNum;
     private String makeDate;
     private int includeTaxUnitPrice;
@@ -35,11 +35,11 @@ public class TccgDetail {
         this.inAssistAmount = inAssistAmount;
     }
 
-    public int getInStoreMoney() {
+    public Float getInStoreMoney() {
         return inStoreMoney;
     }
 
-    public void setInStoreMoney(int inStoreMoney) {
+    public void setInStoreMoney(Float inStoreMoney) {
         this.inStoreMoney = inStoreMoney;
     }
 
@@ -123,11 +123,11 @@ public class TccgDetail {
         this.unitId = unitId;
     }
 
-    public int getBusUnitPrice() {
+    public Float getBusUnitPrice() {
         return busUnitPrice;
     }
 
-    public void setBusUnitPrice(int busUnitPrice) {
+    public void setBusUnitPrice(Float busUnitPrice) {
         this.busUnitPrice = busUnitPrice;
     }
 

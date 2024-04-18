@@ -13,6 +13,7 @@ public class WarehouseStockBo {
     private String notForSaleReservedQty;
     private String warehouseCode;
     private String skuId;
+    private String itemCode;
     private String skuName;
     private String status;
     private List<WarehouseStockBatchBo> batchList;
@@ -103,5 +104,13 @@ public class WarehouseStockBo {
 
     public void setBatchList(List<WarehouseStockBatchBo> batchList) {
         this.batchList = batchList;
+    }
+
+    public String getItemCode() {
+        return itemCode;
+    }
+
+    public void setItemCode(String itemCode) {
+        this.itemCode = itemCode;
     }
 }

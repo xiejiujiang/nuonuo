@@ -45,7 +45,7 @@ public class TestController {
             tccg.setSupplierId("supplierzcghsorgan");
             List<TccgDetail> detail = new ArrayList<TccgDetail>();
             TccgDetail tccgDetail1 = new TccgDetail();
-            tccgDetail1.setInStoreMoney(10);
+            tccgDetail1.setInStoreMoney(10f);
             tccgDetail1.setGiftFlag(false);
             tccgDetail1.setInBusAmount(1);
             tccgDetail1.setBatchCode("1234");
@@ -55,7 +55,7 @@ public class TestController {
             tccgDetail1.setInStoreId("402887698e3ad5f9018e3b794789006b");
             tccgDetail1.setTaxMoney(0);
             tccgDetail1.setItemId("402887698e3ad5f9018e3b7a0ff9006c");
-            tccgDetail1.setBusUnitPrice(10);
+            tccgDetail1.setBusUnitPrice(10.0f);
             tccgDetail1.setSortNum(1);
             tccgDetail1.setMakeDate("2024-03-15 02:30:11");
             tccgDetail1.setIncludeTaxUnitPrice(10);
