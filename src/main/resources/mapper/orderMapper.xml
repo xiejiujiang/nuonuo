@@ -190,4 +190,9 @@
         and t2.idinventory = t5.id and t5.id = t3.idinventory and t5.code = #{inventorycode}
         and t2.taxAmount = ${factsaleamount}
     </select>
+
+    <update id="updateXSCKParas" parameterType="java.util.Map">
+        update ST_RDRecord set dispatchAddress = #{DispatchAddress},TransVehicleInfo = #{TransVehicleInfo}
+        where code = #{xsckdcode} and dispatchAddress is null and TransVehicleInfo is null
+    </update>
 </mapper>

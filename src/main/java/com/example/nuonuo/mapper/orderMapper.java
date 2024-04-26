@@ -73,4 +73,5 @@ public interface orderMapper {
 
     Map<String,Object> getfapiaoMapBySANoBath(@Param("sacode")String sacode,@Param("inventorycode")String inventorycode,@Param("factsaleamount")String factsaleamount);
 
+    void updateXSCKParas(Map<String,String> parss);
 }

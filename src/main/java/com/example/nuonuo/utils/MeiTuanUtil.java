@@ -1,6 +1,7 @@
 package com.example.nuonuo.utils;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.nuonuo.entity.mida.chukureturn.OrderDetailsRespose;
 import com.meituan.sdk.DefaultMeituanClient;
 import com.meituan.sdk.MeituanClient;
 import com.meituan.sdk.MeituanResponse;
@@ -11,6 +12,7 @@ import com.meituan.sdk.model.tuangouNg.coupon.couponQueryLocalListByDate.CouponQ
 import com.meituan.sdk.model.tuangouNg.coupon.couponQueryLocalListByDate.CouponQueryLocalListByDateResponse;
 import com.meituan.sdk.model.tuangouNg.coupon.couponQueryLocalListByDate.EOrders;
 
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -63,7 +65,7 @@ public class MeiTuanUtil {
         parma.put("charset","UTF-8");
         parma.put("businessId","18");
         parma.put("grantType","refresh_token");
-        String oldrefreshtoken = "7e34e3463901eafa8241d9b7316d48a097f8c5525121be1df2f8be26a269a0fb9f23a51f90030e89e5822a9f4c963a9c1d2647234142a8cf657d66f9b1375ac4";
+        String oldrefreshtoken = "7e34e3463901eafa8241d9b7316d48a097f8c5525121be1df2f8be26a269a0fbaf708681fc6cb5741be0faa212f6d9e49ab7fe98a8270bd6f9c5427b0054f7c0";
         parma.put("refreshToken",oldrefreshtoken);
         String sign = SignUtil.getSign(signKey,parma);
         parma.put("sign",sign);
@@ -79,7 +81,7 @@ public class MeiTuanUtil {
 
 
         //测试调用美团的普通接口
-        Map<String, String> signMap = new HashMap<String, String>();
+        /*Map<String, String> signMap = new HashMap<String, String>();
         //String url = "https://api-open-cater.meituan.com/rms/scmplus/inventory/api/v1/chain/warehouse/list";
         String url = "https://api-open-cater.meituan.com/rms/scmplus/organization/api/v1/chain/organization/query";
         signMap.put("businessId","18");
@@ -93,7 +95,7 @@ public class MeiTuanUtil {
         String sign = SignUtil.getSign("wybkd1o9lsh99ttx",signMap);
         signMap.put("sign",sign);
         String result = HttpClient.MeiTuansendPostRequest(url,signMap);
-        System.out.println("result == " + result);
+        System.out.println("result == " + result);*/
 
         /*Long developerId = 112274L;
         String signKey = "wybkd1o9lsh99ttx";
@@ -123,6 +125,29 @@ public class MeiTuanUtil {
         } catch (MtSdkException e) {
             e.printStackTrace();
         }*/
+
+
+
+        String url = "https://api-open-cater.meituan.com/rms/scmplus/distribution/api/v1/chain/deliveryorder/delivery";//配送发货
+        String result = "";
+        try {
+            Map<String, String> signMap = new HashMap<String, String>();
+            signMap.put("appAuthToken","V2-46a4b3ed23a6472608073aea082d382e7f65f22daf459c0ae3019d77d0609ab0de01a28feff1a35bdda88b0ce2c71c33a7bb001e09861acb180dfcf6285cef11");
+            signMap.put("businessId","18");
+            signMap.put("charset","UTF-8");
+            signMap.put("developerId","112274");
+            signMap.put("timestamp",""+(System.currentTimeMillis()/1000));
+            signMap.put("version","2");
+            String biz = "{\"deliveryRows\":[{\"rowId\":\"J70J0ON7clOQ8ZUCMUnkQcfexa+LGsMHgtkfw1Ih2oA=\",\"deliveryAmount\":\"3\",\"goodsId\":\"2BBBDIyhXGjGtWbx5k5xCg==\",\"unitId\":\"b+7w71A4+pqHKGfX7paheg==\",\"warehouseId\":\"AcZ4Z3fgvpn6hQ8XP9SZcg==\"}],\"deliveryTime\":1714060800000,\"expectDeliveryTime\":1714060800000,\"expectReceiveTime\":1714060800000,\"itemSn\":\"PS2404260003\",\"orgId\":2038410}";
+            signMap.put("biz",biz);
+            String sign = SignUtil.getSign("wybkd1o9lsh99ttx",signMap);
+            signMap.put("sign",sign);
+            signMap.put("biz", URLEncoder.encode(biz,"UTF-8"));
+            result = HttpClient.MeiTuansendPostRequest(url,signMap);
+            System.out.println("------------调用美团的配送发货单 结果：" + result);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
 
     }
 }

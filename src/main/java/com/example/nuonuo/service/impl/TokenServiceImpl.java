@@ -13,9 +13,12 @@ import com.example.nuonuo.entity.hongren.chukufahuomix.*;
 import com.example.nuonuo.entity.hongren.chukure.HrchukuReturn;
 import com.example.nuonuo.entity.hongren.wmsreturn.HongrenWMSddAfter;
 import com.example.nuonuo.entity.mida.batchcukundtail.BatchSkuCukun;
+import com.example.nuonuo.entity.mida.chukureturn.MobileEcOrderItemBo;
 import com.example.nuonuo.entity.mida.chukureturn.OrderDetailsRespose;
 import com.example.nuonuo.entity.mida.dddetail.DDdetail;
+import com.example.nuonuo.entity.mida.ddreturn.MidaddReturn;
 import com.example.nuonuo.entity.mida.fahuoddct.Fhdd;
+import com.example.nuonuo.entity.mida.fahuoddct.MidaFhdd;
 import com.example.nuonuo.entity.mida.kucun.Midack;
 import com.example.nuonuo.entity.mida.rukureturn.InboundStockInfo;
 import com.example.nuonuo.entity.mida.rukureturn.WarehouseStockBo;
@@ -34,6 +37,8 @@ import com.jiujin.scm.open.sdk.bo.BatchSkuStockInfo;
 import com.jiujin.scm.open.sdk.bo.CreatedOrderBo;
 import com.jiujin.scm.open.sdk.bo.OrderInfo;
 import com.jiujin.scm.open.sdk.bo.SkuStockInfo;
+import com.jiujin.scm.open.sdk.client.MidaOpenClient;
+import com.jiujin.scm.open.sdk.client.OpenClient;
 import com.jiujin.scm.open.sdk.request.CreatedOrderRequest;
 import com.jiujin.scm.open.sdk.request.GetBatchSkuStockRequest;
 import com.jiujin.scm.open.sdk.request.GetOrderInfoRequest;
@@ -70,6 +75,12 @@ public class TokenServiceImpl implements TokenService {
     private static final String tiancaiadmin = "admin";
 
     private static final String tiancaipassword = "0000";
+
+    private static final String midaurl = "https://dev-scm.canguanwuyou.com/router/rest";
+
+    private static final String midaappKey = "7AMDRzbgKAfTNhgbwU7vCXTMBv90m5eM";
+
+    private static final String midasecret = "84IKqxInlKa9KrXnfNAF82sGWSlcEGPWacAZuA9mtKcxBq8ZJNkdKB7FTD5I3dE5";
 
     @Autowired
     private orderMapper orderMapper;
@@ -260,7 +271,7 @@ public class TokenServiceImpl implements TokenService {
             item.setItemCode(tcbhdData.getItemCode());//商品编号
             items.add(item);
             orderInfo.setOrderItems(items);
-            Fhdd midafhdd = addMiDaFaHuoChuku(orderInfo);//请求米大  创建订单发货
+            MidaFhdd midafhdd = addMiDaFaHuoChuku(orderInfo);//请求米大  创建订单发货
         }
         //----------------根据  仓库+配送中心 下发 给 弘人-------------------------
         Request req = new Request();
@@ -322,7 +333,7 @@ public class TokenServiceImpl implements TokenService {
     //WMS发货后，回传 实发 数量给天财的 中心出库单(统配出和外销出回传数量的接口)
     @Override
     public String updateTCchukuReturn(TcchukuReturn tcchukuReturn){
-        String url =  tiancaiurl+"/api/yj/1.0/updateAmount.do";
+        String url =  tiancaiurl+"api/yj/1.0/updateAmount.do";
         String res = HttpClient.doPostTestThree(url,tcchukuReturn);
         return res;
     }
@@ -392,102 +403,76 @@ public class TokenServiceImpl implements TokenService {
         zhongtaiMapper.insertTCdd(tcZXCHUKUReturn);
         zhongtaiMapper.insertTCddDetail(tcZXCHUKUReturn.getId(),tcZXCHUKUReturn.getDetail());
 
-        //先下发米大WMS的发货订单吧，因为米大的最简单！   但是 天财的单子  不会 下发给 米大 啊！
-        /*for(TcZXCHUKUReturnDetail tcZXCHUKUReturnDetail : tcZXCHUKUReturn.getDetail()){
-            CreatedOrderBo orderInfo = new CreatedOrderBo();
-            orderInfo.setAddress(tcZXCHUKUReturn.getReceiverInfodetailAddress());
-            orderInfo.setCustomerOrderNo(tcZXCHUKUReturn.getBillNo());
-            orderInfo.setRemarks(tcZXCHUKUReturn.getRemark());
-            orderInfo.setWarehouseCode(tcZXCHUKUReturnDetail.getWarehouseCode());
-            List<CreatedOrderBo.OrderItem> orderItems = new ArrayList<CreatedOrderBo.OrderItem>();
-            CreatedOrderBo.OrderItem orderItem = new CreatedOrderBo.OrderItem();
-            orderItem.setItemCode(tcZXCHUKUReturnDetail.getItemCode());
-            orderItem.setQty(Integer.valueOf(tcZXCHUKUReturnDetail.getOutBusAmount()));
-            orderItems.add(orderItem);
-            orderInfo.setOrderItems(orderItems);
-            Fhdd mifhddreStr = addMiDaFaHuoChuku(orderInfo);
-            // 记录结果
-            LOGGER.error("--------------天财出库单下发给米大进行发货出库的结果是： " + mifhddreStr);
-        }*/
-
         //后 下发到 弘人WMS的发货出库订单
         List<Map<String,Object>> dddetailList = zhongtaiMapper.getDDDetailListByddId(""+tcZXCHUKUReturn.getId());//查出这个订单所有明细
+        Request hongrenFHDD = new Request();
+        DeliveryOrder deliveryOrder = new DeliveryOrder();
+        String deliveryOrderCode = "tc-"+tcZXCHUKUReturn.getBillNo();
+        deliveryOrder.setDeliveryOrderCode(deliveryOrderCode);//出库单号
+        deliveryOrder.setOrderType("B2BCK");//B2BCK出库
+        //deliveryOrder.setWarehouseCode(tcddDetail.get("warehouseCode").toString());//对应在弘人的仓库
+        deliveryOrder.setWarehouseCode("YJLF");//测试环境下 仓库只有一个 写死可以，但是 正式环境 有多个，需要拆分？
+        deliveryOrder.setSourcePlatformCode("OTHERS");
+        deliveryOrder.setSourcePlatformName(URLEncoder.encode("天财","UTF-8"));
+        deliveryOrder.setCreateTime(new SimpleDateFormat("yyyy-MM-dd~~~HH:mm:ss").format(new Date()));
+        deliveryOrder.setServiceCode("NCWLJH");
+        deliveryOrder.setOperateTime(new SimpleDateFormat("yyyy-MM-dd~~~HH:mm:ss").format(new Date()));
+        deliveryOrder.setShopNick(URLEncoder.encode(tcZXCHUKUReturn.getReceiverInfoname(),"UTF-8"));
+        deliveryOrder.setLogisticsCode("OTHER");
+        SenderInfo senderInfo = new SenderInfo();
+        senderInfo.setName(URLEncoder.encode("天财发货仓库","UTF-8"));
+        senderInfo.setMobile("13000000000");//
+        senderInfo.setProvince(URLEncoder.encode("四川省","UTF-8"));
+        senderInfo.setCity(URLEncoder.encode("成都市","UTF-8"));
+        senderInfo.setDetailAddress(URLEncoder.encode("青白江区1号","UTF-8"));
+        deliveryOrder.setSenderInfo(senderInfo);
+        ReceiverInfo receiverInfo = new ReceiverInfo();
+        receiverInfo.setName(URLEncoder.encode(tcZXCHUKUReturn.getReceiverInfoname(),"UTF-8"));
+        receiverInfo.setMobile(tcZXCHUKUReturn.getReceiverInfomobile());
+        receiverInfo.setProvince(URLEncoder.encode(tcZXCHUKUReturn.getReceiverprovince(),"UTF-8"));
+        receiverInfo.setCity(URLEncoder.encode(tcZXCHUKUReturn.getReceivercity(),"UTF-8"));
+        receiverInfo.setDetailAddress(URLEncoder.encode(tcZXCHUKUReturn.getReceiverInfodetailAddress(),"UTF-8"));
+        deliveryOrder.setReceiverInfo(receiverInfo);
+        hongrenFHDD.setDeliveryOrder(deliveryOrder);
+        OrderLines orderLines = new OrderLines();
+        List<OrderLine> orderLinelist = new ArrayList<OrderLine>();
         for(int i = 0 ; i < dddetailList.size(); i ++ ){
             Map<String,Object> tcddDetail = dddetailList.get(i);
-            String dd_detail_id = tcddDetail.get("dd_detail_id").toString();
-            Request hongrenFHDD = new Request();
-            DeliveryOrder deliveryOrder = new DeliveryOrder();
-            String deliveryOrderCode = "tc-"+tcZXCHUKUReturn.getBillNo() + "-" + i;
-            tcddDetail.put("deliveryOrderCode",deliveryOrderCode);
-            deliveryOrder.setDeliveryOrderCode(URLEncoder.encode(deliveryOrderCode,"UTF-8"));//出库单号
-            deliveryOrder.setOrderType("B2BCK");//B2BCK出库
-            //deliveryOrder.setWarehouseCode(tcddDetail.get("warehouseCode").toString());//对应在弘人的仓库
-            deliveryOrder.setWarehouseCode("YJLF");
-            deliveryOrder.setSourcePlatformCode("OTHERS");
-            deliveryOrder.setSourcePlatformName(URLEncoder.encode("天财","UTF-8"));
-            deliveryOrder.setCreateTime(new SimpleDateFormat("yyyy-MM-dd~~~HH:mm:ss").format(new Date()));
-            deliveryOrder.setServiceCode("NCWLJH");
-            deliveryOrder.setOperateTime(new SimpleDateFormat("yyyy-MM-dd~~~HH:mm:ss").format(new Date()));
-            deliveryOrder.setShopNick(URLEncoder.encode(tcZXCHUKUReturn.getReceiverInfoname(),"UTF-8"));
-            deliveryOrder.setLogisticsCode("OTHER");
-            SenderInfo senderInfo = new SenderInfo();
-            senderInfo.setName(URLEncoder.encode("天财发货仓库","UTF-8"));
-            senderInfo.setMobile("13000000000");//
-            senderInfo.setProvince(URLEncoder.encode("四川省","UTF-8"));
-            senderInfo.setCity(URLEncoder.encode("成都市","UTF-8"));
-            senderInfo.setDetailAddress(URLEncoder.encode("青白江区1号","UTF-8"));
-            deliveryOrder.setSenderInfo(senderInfo);
-            ReceiverInfo receiverInfo = new ReceiverInfo();
-            receiverInfo.setName(URLEncoder.encode(tcZXCHUKUReturn.getReceiverInfoname(),"UTF-8"));
-            receiverInfo.setMobile(tcZXCHUKUReturn.getReceiverInfomobile());
-            receiverInfo.setProvince(URLEncoder.encode(tcZXCHUKUReturn.getReceiverprovince(),"UTF-8"));
-            receiverInfo.setCity(URLEncoder.encode(tcZXCHUKUReturn.getReceivercity(),"UTF-8"));
-            receiverInfo.setDetailAddress(URLEncoder.encode(tcZXCHUKUReturn.getReceiverInfodetailAddress(),"UTF-8"));
-            deliveryOrder.setReceiverInfo(receiverInfo);
-            hongrenFHDD.setDeliveryOrder(deliveryOrder);
-            OrderLines orderLines = new OrderLines();
-            List<OrderLine> orderLinelist = new ArrayList<OrderLine>();
+            //String dd_detail_id = tcddDetail.get("dd_detail_id").toString();
             OrderLine orderLine = new OrderLine();
-            //orderLine.setOrderLineNo(""+);//行号
+            orderLine.setOrderLineNo(""+i);//行号
             orderLine.setOwnerCode("YJLF");//货主编码？ 这玩意是固定的吗？
             orderLine.setItemCode(tcddDetail.get("itemCode").toString());
             orderLine.setPlanQty(Integer.valueOf(tcddDetail.get("outNumbers").toString()));
-            //价格 应该不用 传给WMS 啊
-            //orderLine.setActualPrice(1.0);// 姚老师说 正在开发啊，后面会加上的
             orderLine.setActualPrice(Double.valueOf(tcddDetail.get("demandPrice").toString()));
             orderLinelist.add(orderLine);
-            orderLines.setOrderLine(orderLinelist);
-            hongrenFHDD.setOrderLines(orderLines);
-            if(ct == 0){
-                String hongrenreStr = addHongrenFaHuoChuku(hongrenFHDD);//下发弘人WMS出库
-                hongrenreStr = new String(hongrenreStr.getBytes("GBK"), "UTF-8");
-                LOGGER.error("--------------天财出库单下发给弘人进行发货出库的结果是：" +hongrenreStr);
-                if(hongrenreStr.contains("success")){
-                    // 记录结果
-                    HongrenWMSddAfter hongrenWMSddAfter = new HongrenWMSddAfter();
-                    hongrenWMSddAfter.setDdid(dd_detail_id);
-                    hongrenWMSddAfter.setDeliveryOrderCode(tcddDetail.get("deliveryOrderCode").toString());
-                    zhongtaiMapper.insertHongrenWMSddAfter(hongrenWMSddAfter);
-                    Long ddidd = hongrenWMSddAfter.getId();
-                    // 记录对应明细
-                    tcddDetail.put("ddidd",ddidd);
-                    zhongtaiMapper.insertHongrenWMSddAfterDetail(tcddDetail);
-                }else{
-                    //下发给弘人的发货订单失败了！！
-                    LOGGER.error("--------------天财出库单下发给弘人进行发货出库 失败了，对应的订单明细ID： " + dd_detail_id);
-                }
-            }else{//只记录，不下发！
+        }
+        orderLines.setOrderLine(orderLinelist);
+        hongrenFHDD.setOrderLines(orderLines);
+        if(ct == 0){
+            String hongrenreStr = addHongrenFaHuoChuku(hongrenFHDD);//下发弘人WMS出库
+            LOGGER.error("--------------天财出库单下发给弘人进行发货出库的结果是：" +hongrenreStr);
+            if(hongrenreStr.contains("success")){
                 // 记录结果
-                LOGGER.error("--------------只记录，不下发！----------------" );
                 HongrenWMSddAfter hongrenWMSddAfter = new HongrenWMSddAfter();
-                hongrenWMSddAfter.setDdid(dd_detail_id);
-                hongrenWMSddAfter.setDeliveryOrderCode(tcddDetail.get("deliveryOrderCode").toString());
+                hongrenWMSddAfter.setDdid(""+tcZXCHUKUReturn.getId());
+                hongrenWMSddAfter.setDeliveryOrderCode(deliveryOrderCode);
                 zhongtaiMapper.insertHongrenWMSddAfter(hongrenWMSddAfter);
                 Long ddidd = hongrenWMSddAfter.getId();
                 // 记录对应明细
-                tcddDetail.put("ddidd",ddidd);
-                zhongtaiMapper.insertHongrenWMSddAfterDetail(tcddDetail);
+                zhongtaiMapper.insertHongrenWMSddAfterDetail(ddidd,hongrenFHDD.getOrderLines().getOrderLine());
+            }else{
+                LOGGER.error("--------------天财出库单下发给弘人进行发货出库 失败了，对应的天财订单号： " + tcZXCHUKUReturn.getBillNo());
             }
+        }else{//只记录，不下发！
+            LOGGER.error("--------------只记录，不下发！----------------" );
+            HongrenWMSddAfter hongrenWMSddAfter = new HongrenWMSddAfter();
+            hongrenWMSddAfter.setDdid(""+tcZXCHUKUReturn.getId());
+            hongrenWMSddAfter.setDeliveryOrderCode(deliveryOrderCode);
+            zhongtaiMapper.insertHongrenWMSddAfter(hongrenWMSddAfter);
+            Long ddidd = hongrenWMSddAfter.getId();
+            // 记录对应明细
+            zhongtaiMapper.insertHongrenWMSddAfterDetail(ddidd,hongrenFHDD.getOrderLines().getOrderLine());
         }
         return "";
     }
@@ -575,6 +560,7 @@ public class TokenServiceImpl implements TokenService {
             rukuMapDB.put("sourceType","hongren");
             rukuMapDB.put("warehouseCode",hongrenruku.getEntryOrder().getWarehouseCode());
             rukuMapDB.put("itemCode",orderLine.getItemCode());
+            rukuMapDB.put("itemName",orderLine.getItemName());
             rukuMapDB.put("supplierCode",itemMap.get("tcSupplierCode"));
             rukuMapDB.put("supplierName",itemMap.get("supplierName"));
             rukuMapDB.put("actualQty",""+orderLine.getActualQty());
@@ -624,53 +610,57 @@ public class TokenServiceImpl implements TokenService {
     public String addHongrenChuKuToTCMT(String xml){
         //把弘人反馈的 出库确认数据 转成一个JAVA 对象
         com.example.nuonuo.entity.hongren.chukuqr.Request hongrenchuku = XmlToObjectConverter.convertXmlToObject(xml, com.example.nuonuo.entity.hongren.chukuqr.Request.class);
+        String deliveryOrderCode = hongrenchuku.getDeliveryOrder().getDeliveryOrderCode();
+        //先更新本地，再反写 天财/ 美团？
+        String voucherId = zhongtaiMapper.getnewestTCBillNoByHongRenDeliveryOrderCode(deliveryOrderCode);//最新的天财的订单id
+        for(com.example.nuonuo.entity.hongren.rukuqr.OrderLine orderLine : hongrenchuku.getOrderLines().getOrderLine()){
+            String orderItemId = orderLine.getOrderLineNo();//明细行号  对应 数据的 orderItemId
+            String itemCode = orderLine.getItemCode();
+            String actualQty = ""+orderLine.getActualQty();//实发
+            HashMap<String,String> rampas = new HashMap<String,String>();
+            rampas.put("deliveryOrderCode",deliveryOrderCode);
+            rampas.put("orderItemId",orderItemId);
+            rampas.put("actualQty",actualQty);
+            rampas.put("voucherId",voucherId);
+            rampas.put("itemCode",itemCode);
+            zhongtaiMapper.updateWMSDDDetailByHongren(rampas);
+        }
 
-        //1先更新上游系统， 2再更新中台数据库
-
-        //美团 配送反写
-        //ScmChainDeliveryDeliveryOrder1Request mtdv = new ScmChainDeliveryDeliveryOrder1Request();
-        // 其实这个地方 考验的 是  数据库的 表关系 设计
-        // 1. 记录 美团的配送单 信息 。2 记录 下发给米大后的 返回信息  3. 米大出库后，根据 米大的 发货订单关系信息， 再反推到 对于的 美团 配送单 上面！
-        //List<Map<String,String>> orgList = orderMapper.getDBAllOrgList();
-        //String appAuthToken = orgList.get(0).get("accessToken").toString();
-        ///String mTres = addMeituanPeisongFaHuo(mtdv, "wybkd1o9lsh99ttx", "112274", appAuthToken);
-
-        //天财 出库反写
-        Map<String,Object> tcddMap = zhongtaiMapper.getTCDDdetailByHongRenChukuReturn(hongrenchuku.getOrderLines().getOrderLine().get(0).getItemCode(),hongrenchuku.getDeliveryOrder().getDeliveryOrderCode());
+        // 天财 出库反写 先获取 根据deliveryOrderCode找到最开始的天财订单，然后对应的来源单据编号，再去获取这个编号下面的最新的天财订单明细
+        List<Map<String,Object>> tcddMapList = zhongtaiMapper.getTCDDdetailByHongRenChukuReturn(voucherId);
         TcchukuReturn tcchukuReturn = new TcchukuReturn();
         tcchukuReturn.setUsername(tiancaiadmin);
         tcchukuReturn.setPassword(tiancaipassword);
         tcchukuReturn.setEnt(tiancaient);
         tcchukuReturn.setAutoAuditFlag(0);
         tcchukuReturn.setMessageId("HONGREN"+System.currentTimeMillis());
-        tcchukuReturn.setCldBillId(tcddMap.get("voucherId").toString());
+        tcchukuReturn.setCldBillId(voucherId);
         List<TcchukuReturnDetail> listdetail = new ArrayList<TcchukuReturnDetail>();
-        for(com.example.nuonuo.entity.hongren.rukuqr.OrderLine orderLine : hongrenchuku.getOrderLines().getOrderLine()){
+        for(Map<String,Object> tcddMap : tcddMapList){
             TcchukuReturnDetail tcchukuReturnDetail = new TcchukuReturnDetail();
             tcchukuReturnDetail.setDtId(tcddMap.get("detailId").toString());
-            tcchukuReturnDetail.setOutBusAmount(Integer.valueOf(orderLine.getActualQty()));
+            tcchukuReturnDetail.setOutBusAmount(Integer.valueOf(tcddMap.get("actualQty").toString()));
             listdetail.add(tcchukuReturnDetail);
         }
         tcchukuReturn.setDetail(listdetail);
         String tCres = updateTCchukuReturn(tcchukuReturn);
         LOGGER.error("------- 调用天财出库确认反写的结果是：" + tCres);
-        if(tCres.contains("true")){
-            //更新下 下发给弘人后的发货订单明细里面的 实发数量 2.4 表 - 实发数量为空的表
-            zhongtaiMapper.updateWMSDDDetailByHongren(hongrenchuku.getOrderLines().getOrderLine().get(0).getItemCode(),hongrenchuku.getDeliveryOrder().getDeliveryOrderCode(),hongrenchuku.getOrderLines().getOrderLine().get(0).getActualQty());
-        }
+
+        //美团 配送反写>?
         return "";
     }
 
     //------------------------------------------- 米大-----------------------------------------------------//
     @Override
-    public Fhdd addMiDaFaHuoChuku(CreatedOrderBo orderInfo){
+    public MidaFhdd addMiDaFaHuoChuku(CreatedOrderBo orderInfo){
         CreatedOrderRequest request = new CreatedOrderRequest();
         request.setOrderBo(orderInfo);
-        GetBatchOrderResponse response = Mida.client.execute(request);
+        OpenClient midaclient = new MidaOpenClient(Mida.url, Mida.appKey, Mida.secret);
+        GetBatchOrderResponse response = midaclient.execute(request);
         String responseBody = response.getBody();
         LOGGER.info("--------------- 米大的订单下推后返回结果是： " + responseBody);
-        Fhdd fhdd = JSONObject.parseObject(responseBody,Fhdd.class);
-        return fhdd;
+        MidaFhdd midafhdd = JSONObject.parseObject(responseBody,MidaFhdd.class);
+        return midafhdd;
     }
 
     @Override
@@ -705,53 +695,101 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public String addMiDaChuKuToTCMT(OrderDetailsRespose midachukureturn)throws Exception{
-        // 其实这个地方 考验的 是  数据库的 表关系 设计
         // 1. 记录 美团的配送单 信息 。2 记录 下发给米大后的 返回信息  3. 米大出库后，根据 米大的 发货订单关系信息， 再反推到 对于的 美团 配送单 上面！
-        //更新下 下发给米大的发货订单明细里面的 实发数量
-        zhongtaiMapper.updateWMSDDDetailByMida(midachukureturn.getOrderNo(),midachukureturn.getItems().get(0).getItemCode(),midachukureturn.getItems().get(0).getQty());
-        Map<String,Object> mtdetailMap = zhongtaiMapper.getMTddDetailByMIDA(midachukureturn.getOrderNo(),midachukureturn.getItems().get(0).getItemCode());
-        //这里姚判断下，如果应发 > 实发，就需要 调用  配送单发货 + 配送单拆弹 两个接口。
-        // 否则 就只调用  配送单发货的 接口。
-        if(Float.valueOf(mtdetailMap.get("planQty").toString()) == Float.valueOf(midachukureturn.getItems().get(0).getQty()) ){
-            //把米大的出库数据，反推给  美团的配送单 （不会反写到天财的单子上，因为 天财的单子 只可能会下发给弘人，不会下发给米大！）
+        for(MobileEcOrderItemBo midaitme : midachukureturn.getItems()){
+            HashMap<String,String> prams = new HashMap<String,String>();
+            String midaorderNo = midachukureturn.getOrderNo();
+            String midaItemId = midaitme.getOrderItemId();
+            int midaQty = midaitme.getQty();
+            prams.put("midaorderNo",midaorderNo);
+            prams.put("midaItemId",midaItemId);
+            prams.put("midaQty",""+midaQty);
+            zhongtaiMapper.updateWMSDDDetailByMida(prams);
+        }
+
+        // 这里要 循环判断  所有的 应发 和  实发 ！ 如果 应发 > 实发，就需要 调用  配送单发货 + 配送单拆弹 两个接口。否则 就只调用  配送单发货的 接口。
+        List<Map<String,Object>> mtdetailMapList = zhongtaiMapper.getMTddDetailByMIDA(midachukureturn.getOrderNo());
+        String mtItemSn = mtdetailMapList.get(0).get("voucherCode").toString();
+        int faflag = 1;
+        for(Map<String,Object> mtdetailMap : mtdetailMapList){
+            float FplanQty = Float.valueOf(mtdetailMap.get("planQty").toString());//应发
+            float midaQty =  Float.valueOf(mtdetailMap.get("actualQty").toString());//实发
+            if(FplanQty > midaQty){
+                faflag = 0;
+            }
+        }
+        if(faflag == 1){//说明 全部发完！ 调用 配送发货接口
             ScmChainDeliveryDeliveryOrder1Request mtdv = new ScmChainDeliveryDeliveryOrder1Request();
             mtdv.setOrgId(2038410L);
-            mtdv.setItemSn(mtdetailMap.get("voucherCode").toString());
-            //mtdv.setVersion(2);
+            mtdv.setItemSn(mtItemSn);
             String dateStr = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
             Long datel = new SimpleDateFormat("yyyy-MM-dd").parse(dateStr).getTime();
             mtdv.setDeliveryTime(datel);
             mtdv.setExpectDeliveryTime(datel);
             mtdv.setExpectReceiveTime(datel);
             List<DeliveryItemDetailDTO> listDe = new ArrayList<DeliveryItemDetailDTO>();
-            DeliveryItemDetailDTO delivo = new DeliveryItemDetailDTO();
-            delivo.setGoodsId(mtdetailMap.get("itemId").toString());
-            delivo.setUnitId(mtdetailMap.get("unitId").toString());
-            delivo.setWarehouseId(mtdetailMap.get("warehouseId").toString());
-            delivo.setDeliveryAmount(""+midachukureturn.getItems().get(0).getQty());
-            listDe.add(delivo);
+            for(Map<String,Object> mtdetailMap : mtdetailMapList){
+                DeliveryItemDetailDTO delivo = new DeliveryItemDetailDTO();
+                delivo.setGoodsId(mtdetailMap.get("itemId").toString());
+                delivo.setWarehouseId(mtdetailMap.get("warehouseId").toString());
+                delivo.setUnitId(mtdetailMap.get("unitId").toString());
+                delivo.setDeliveryAmount(mtdetailMap.get("actualQty").toString());
+                delivo.setRowId(mtdetailMap.get("detailId").toString());
+                listDe.add(delivo);
+            }
             mtdv.setDeliveryRows(listDe);
             List<Map<String,String>> orgList = orderMapper.getDBAllOrgList();
             String appAuthToken = orgList.get(0).get("accessToken").toString();
             String mTres = addMeituanPeisongFaHuo(mtdv, "wybkd1o9lsh99ttx", "112274", appAuthToken);
             return mTres;
-        }
-        if(Float.valueOf(mtdetailMap.get("planQty").toString()) > Float.valueOf(midachukureturn.getItems().get(0).getQty()) ){
-            // 先发 再拆？ 还是 先拆再发啊？  我写一个拆单，如果需要 配送发货单，上面的复制下即可！
-            MeituanPeisongChaidanDTO chaidanDTO = new MeituanPeisongChaidanDTO();
-            chaidanDTO.setOrgId(2038410L);
-            chaidanDTO.setItemSn(mtdetailMap.get("voucherCode").toString());
-            List<SpiltDeliveryOrderDetailDTO> details = new ArrayList<SpiltDeliveryOrderDetailDTO>();
-            SpiltDeliveryOrderDetailDTO deliveryOrderDetailDTO = new SpiltDeliveryOrderDetailDTO();
-            deliveryOrderDetailDTO.setGoodsId(mtdetailMap.get("itemId").toString());
-            deliveryOrderDetailDTO.setId(mtdetailMap.get("detailId").toString());
-            deliveryOrderDetailDTO.setSplitAmount(""+(Float.valueOf(mtdetailMap.get("planQty").toString())-Float.valueOf(midachukureturn.getItems().get(0).getQty())));
-            deliveryOrderDetailDTO.setSplitAll(false);//是否全拆？？？ 啥意思啊 ！
-            details.add(deliveryOrderDetailDTO);
-            chaidanDTO.setDetails(details);
+        }else{// 只能是  先拆  再 发！！  范涛之老师说的！！！
+            ScmChainDeliveryDeliveryOrder1Request mtdv = new ScmChainDeliveryDeliveryOrder1Request();
+            mtdv.setOrgId(2038410L);
+            mtdv.setItemSn(mtItemSn);
+            String dateStr = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+            Long datel = new SimpleDateFormat("yyyy-MM-dd").parse(dateStr).getTime();
+            mtdv.setDeliveryTime(datel);
+            mtdv.setExpectDeliveryTime(datel);
+            mtdv.setExpectReceiveTime(datel);
+            List<DeliveryItemDetailDTO> listDe = new ArrayList<DeliveryItemDetailDTO>();
+            List<SpiltDeliveryOrderDetailDTO> chaidandetails = new ArrayList<SpiltDeliveryOrderDetailDTO>();
+            for(Map<String,Object> mtdetailMap : mtdetailMapList){
+                float FplanQty = Float.valueOf(mtdetailMap.get("planQty").toString());//应发
+                float midaQty =  Float.valueOf(mtdetailMap.get("actualQty").toString());//实发
+                if(midaQty > 0){
+                    DeliveryItemDetailDTO delivo = new DeliveryItemDetailDTO();
+                    delivo.setGoodsId(mtdetailMap.get("itemId").toString());
+                    delivo.setWarehouseId(mtdetailMap.get("warehouseId").toString());
+                    delivo.setUnitId(mtdetailMap.get("unitId").toString());
+                    delivo.setDeliveryAmount(mtdetailMap.get("actualQty").toString());
+                    delivo.setRowId(mtdetailMap.get("detailId").toString());
+                    listDe.add(delivo);
+                }
+                float weifa = FplanQty-midaQty;
+                if(weifa != 0 ){
+                    //用来记得 拆单的内容！！
+                    SpiltDeliveryOrderDetailDTO deliveryOrderDetailDTO = new SpiltDeliveryOrderDetailDTO();
+                    deliveryOrderDetailDTO.setGoodsId(mtdetailMap.get("itemId").toString());
+                    deliveryOrderDetailDTO.setId(mtdetailMap.get("detailId").toString());
+                    deliveryOrderDetailDTO.setSplitAmount(""+(FplanQty-midaQty));
+                    deliveryOrderDetailDTO.setSplitAll(false);//是否全拆？？？ 啥意思啊 ！
+                    chaidandetails.add(deliveryOrderDetailDTO);
+                }
+            }
+            mtdv.setDeliveryRows(listDe);
             List<Map<String,String>> orgList = orderMapper.getDBAllOrgList();
             String appAuthToken = orgList.get(0).get("accessToken").toString();
-            String mTres = addMeituanPeisongChaiDan(chaidanDTO, "wybkd1o9lsh99ttx", "112274", appAuthToken);
+
+            //-------------------------- 拆啊！！！！！！！！！！-------------------------------------//
+            MeituanPeisongChaidanDTO chaidanDTO = new MeituanPeisongChaidanDTO();
+            chaidanDTO.setOrgId(2038410L);
+            chaidanDTO.setItemSn(mtItemSn);
+            chaidanDTO.setDetails(chaidandetails);
+            String chaidanres = addMeituanPeisongChaiDan(chaidanDTO, "wybkd1o9lsh99ttx", "112274", appAuthToken);
+
+            //-------------------------- 发啊！！！！！！！！！！-------------------------------------//
+            String mTres = addMeituanPeisongFaHuo(mtdv, "wybkd1o9lsh99ttx", "112274", appAuthToken);
+
         }
         return "";
     }
@@ -859,11 +897,10 @@ public class TokenServiceImpl implements TokenService {
             signMap.put("timestamp",""+(System.currentTimeMillis()/1000));
             signMap.put("version","2");
             signMap.put("biz",JSONObject.toJSONString(cg));
-            LOGGER.error("------- 调用美团的采购入库单的参数biz：" + JSONObject.toJSONString(cg));
             String sign = SignUtil.getSign(signKey,signMap);
             signMap.put("sign",sign);
+            signMap.put("biz",URLEncoder.encode(JSONObject.toJSONString(cg),"UTF-8"));
             result = HttpClient.MeiTuansendPostRequest(url,signMap);
-            result = new String(result.getBytes("GBK"), "UTF-8");
         }catch (Exception e){
             e.printStackTrace();
             result = "------------------ 美团采购入库的代码异常，检查serviceImpl ------------------";
@@ -879,15 +916,15 @@ public class TokenServiceImpl implements TokenService {
             Map<String, String> signMap = new HashMap<String, String>();
             signMap.put("appAuthToken",appAuthToken);
             signMap.put("businessId","18");
-            signMap.put("charset","utf-8");
+            signMap.put("charset","UTF-8");
             signMap.put("developerId",developerId);
             signMap.put("timestamp",""+(System.currentTimeMillis()/1000));
             signMap.put("version","2");
             signMap.put("biz",JSONObject.toJSONString(dv));
             String sign = SignUtil.getSign(signKey,signMap);
             signMap.put("sign",sign);
+            signMap.put("biz",URLEncoder.encode(JSONObject.toJSONString(dv),"UTF-8"));
             result = HttpClient.MeiTuansendPostRequest(url,signMap);
-            result = new String(result.getBytes("GBK"), "UTF-8");
             LOGGER.info("------------调用美团的配送发货单 结果：" + result);
         }catch (Exception e){
             e.printStackTrace();
@@ -912,8 +949,8 @@ public class TokenServiceImpl implements TokenService {
             signMap.put("biz",JSONObject.toJSONString(chaidanDTO));
             String sign = SignUtil.getSign(signKey,signMap);
             signMap.put("sign",sign);
+            signMap.put("biz",URLEncoder.encode(JSONObject.toJSONString(chaidanDTO),"UTF-8"));
             result = HttpClient.MeiTuansendPostRequest(url,signMap);
-            result = new String(result.getBytes("GBK"), "UTF-8");
             LOGGER.info("------------调用美团的配送单拆单 结果：" + result);
         }catch (Exception e){
             e.printStackTrace();
@@ -929,32 +966,38 @@ public class TokenServiceImpl implements TokenService {
         Long ddid = meituanPeiSong.getId();
         zhongtaiMapper.insertMTddDetail(ddid,meituanPeiSong.getBizData().getDetails());
 
-        //2. 要根据仓库来判断，不一定都要发。
-
-        //先下发米大WMS的发货订单吧，因为米大的最简单！
+        //2. 要根据 商品/仓库 来判断，不一定都要发。  逻辑 还没有写哦！
         List<Map<String,Object>> dddetailList = zhongtaiMapper.getDDDetailListByddId(""+ddid);
+
+        //3. 先下发米大WMS的发货订单吧，因为米大的最简单！
+        CreatedOrderBo orderInfo = new CreatedOrderBo();
+        orderInfo.setAddress(meituanPeiSong.getBizData().getItem().getReceiverInfo().getAddress());
+        orderInfo.setCustomerOrderNo(meituanPeiSong.getBizData().getItem().getItemSn());
+        orderInfo.setRemarks(meituanPeiSong.getBizData().getItem().getRemark());
+        List<CreatedOrderBo.OrderItem> orderItems = new ArrayList<CreatedOrderBo.OrderItem>();
         for(int i = 0; i <  dddetailList.size(); i ++ ){
             Map<String,Object> meituanPeisongDetail = dddetailList.get(i);
-            String dd_detail_id = meituanPeisongDetail.get("dd_detail_id").toString();
-            CreatedOrderBo orderInfo = new CreatedOrderBo();
-            orderInfo.setAddress(meituanPeiSong.getBizData().getItem().getReceiverInfo().getAddress());
-            orderInfo.setCustomerOrderNo(meituanPeiSong.getBizData().getItem().getItemSn());
-            orderInfo.setRemarks(meituanPeiSong.getBizData().getItem().getRemark());
+            //String dd_detail_id = meituanPeisongDetail.get("dd_detail_id").toString();
             //orderInfo.setWarehouseCode(meituanPeisongDetail.get("warehouseCode").toString());  米大 可以 不用传仓库
-            List<CreatedOrderBo.OrderItem> orderItems = new ArrayList<CreatedOrderBo.OrderItem>();
             CreatedOrderBo.OrderItem orderItem = new CreatedOrderBo.OrderItem();
             orderItem.setItemCode(meituanPeisongDetail.get("itemCode").toString());
-            //orderItem.setItemCode(meituanPeisongDetail.getGoodsInfo().getCode());
             orderItem.setQty(Integer.valueOf(meituanPeisongDetail.get("outNumbers").toString()));
-            //orderItem.setQty(Integer.valueOf(meituanPeisongDetail.getReceiveOrderAmount().getBizUnitAmount()));
             orderItems.add(orderItem);
-            orderInfo.setOrderItems(orderItems);
-            Fhdd mifhddreStr = addMiDaFaHuoChuku(orderInfo);
-            LOGGER.error("--------------美团配送单下发给米大进行发货出库的结果是： " + mifhddreStr);
-
-            // 记录米大的发货订单 结果
-            zhongtaiMapper.insertMidaWMSddAfter(dd_detail_id,mifhddreStr);
-            zhongtaiMapper.insertMidaWMSddAfterDetail(mifhddreStr.getId(),mifhddreStr.getItems());
+        }
+        orderInfo.setOrderItems(orderItems);
+        MidaFhdd mifhddreDTO = addMiDaFaHuoChuku(orderInfo);
+        // 记录米大的发货订单 结果
+        if(mifhddreDTO.getErrCode().equals("0")){
+            String orderId = mifhddreDTO.getPayload().get(0).getOrderId();
+            String orderNo = mifhddreDTO.getPayload().get(0).getOrderNo();
+            MidaddReturn midaddReturn = new MidaddReturn();
+            midaddReturn.setDdid(""+ddid);
+            midaddReturn.setOrderId(orderId);
+            midaddReturn.setOrderNo(orderNo);
+            zhongtaiMapper.insertMidaWMSddAfter(midaddReturn);
+            zhongtaiMapper.insertMidaWMSddAfterDetail(midaddReturn.getId(),mifhddreDTO.getPayload().get(0).getItems());
+        }else{
+            LOGGER.info("--------------- 米大的订单下推后返回失败，原因是：" + mifhddreDTO.getErrMsg());
         }
 
         //后 下发到 弘人WMS的发货出库订单
@@ -1007,7 +1050,6 @@ public class TokenServiceImpl implements TokenService {
             orderLines.setOrderLine(orderLinelist);
             hongrenFHDD.setOrderLines(orderLines);
             String hongrenreStr = addHongrenFaHuoChuku(hongrenFHDD);//下发弘人WMS出库
-            hongrenreStr = new String(hongrenreStr.getBytes("GBK"), "UTF-8");
             LOGGER.error("--------------美团配送单下发给弘人进行发货出库的结果是： " + hongrenreStr);
             if(hongrenreStr.contains("success")){
                 // 记录结果
@@ -1026,4 +1068,3 @@ public class TokenServiceImpl implements TokenService {
         return "";
     }
 }
-

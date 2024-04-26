@@ -13,7 +13,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
     <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
-    <title>收款单核销明细导入</title>
+    <title>JSP收款单核销明细导入</title>
     <style type="text/css">
         #dd:hover{
             background-color: #D9D9D9;

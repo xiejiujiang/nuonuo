@@ -10,6 +10,7 @@ import com.example.nuonuo.entity.mida.batchcukundtail.BatchSkuCukun;
 import com.example.nuonuo.entity.mida.chukureturn.OrderDetailsRespose;
 import com.example.nuonuo.entity.mida.dddetail.DDdetail;
 import com.example.nuonuo.entity.mida.fahuoddct.Fhdd;
+import com.example.nuonuo.entity.mida.fahuoddct.MidaFhdd;
 import com.example.nuonuo.entity.mida.kucun.Midack;
 import com.example.nuonuo.entity.mida.rukureturn.InboundStockInfo;
 import com.example.nuonuo.entity.tiancai.*;
@@ -70,7 +71,7 @@ public interface TokenService {
 
     //--------------------------- 米大WMS接口 --------------------------------- //
     //发货订单创建接口
-    public Fhdd addMiDaFaHuoChuku(CreatedOrderBo orderInfo);
+    public MidaFhdd addMiDaFaHuoChuku(CreatedOrderBo orderInfo);
 
     //库存查询接口
     public Midack getMiDakucun(SkuStockInfo skuStockInfo);

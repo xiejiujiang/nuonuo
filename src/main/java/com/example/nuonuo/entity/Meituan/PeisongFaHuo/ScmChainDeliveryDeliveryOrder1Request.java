@@ -7,7 +7,6 @@ public class ScmChainDeliveryDeliveryOrder1Request {
 
     private Long orgId;
     private String itemSn;
-    private int version;
     private Long deliveryTime;
     private Long expectDeliveryTime;
     private Long expectReceiveTime;
@@ -29,14 +28,6 @@ public class ScmChainDeliveryDeliveryOrder1Request {
 
     public void setItemSn(String itemSn) {
         this.itemSn = itemSn;
-    }
-
-    public int getVersion() {
-        return version;
-    }
-
-    public void setVersion(int version) {
-        this.version = version;
     }
 
     public Long getDeliveryTime() {

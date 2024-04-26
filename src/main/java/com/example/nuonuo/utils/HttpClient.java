@@ -399,7 +399,6 @@ public class HttpClient {
         HttpPost httpPost = new HttpPost(url);
         // 我这里利用阿里的fastjson，将Object转换为json字符串;(需要导入com.alibaba.fastjson.JSON包)
         String jsonString = JSONObject.toJSONString(tccg);
-        System.out.println("访问天财采购入库接口的参数内容是:" + jsonString);
         StringEntity entity = new StringEntity(jsonString, "UTF-8");
         // post请求是将参数放在请求体里面传过去的;这里将entity放入post请求体中
         httpPost.setEntity(entity);

@@ -3,22 +3,23 @@
 <mapper namespace="com.example.nuonuo.mapper.zhongtaiMapper">
 
     <insert id="addRukuDetailByWMS" parameterType="java.util.List">
-        INSERT INTO sky_wms_ruku(sourceType, warehouseCode, itemCode,itemName,supplierCode,supplierName,actualQty,price,taxPrice,amount,taxAmount,state)
+        INSERT INTO sky_wms_ruku(sourceType, warehouseCode, itemCode,itemName,supplierCode,supplierName,actualQty,price,taxPrice,amount,taxAmount,state,createTime)
         VALUES
         <foreach collection="list" item="item" separator=",">
             (
                 #{item.sourceType},
                 #{item.warehouseCode},
                 #{item.itemCode},
+                #{item.itemName},
                 #{item.supplierCode},
                 #{item.supplierName},
                 #{item.actualQty},
-                #{item.itemName},
                 #{item.price},
                 #{item.taxPrice},
                 #{item.amount},
                 #{item.taxAmount},
-                '0'
+                '0',
+                CONVERT(varchar,getdate(),120)
             )
         </foreach>
     </insert>
@@ -51,7 +52,8 @@
     </insert>
 
     <insert id="insertMTddDetail">
-        INSERT INTO sky_tc_mt_dd_detail (dd_id,detailId,seqId,itemId,itemCode,itemName,outNumbers,unitId,unitName,warehouseId,warehouseCode,warehouseName,demandPrice,demandMoney,taxRate,remark)
+        INSERT INTO sky_tc_mt_dd_detail (dd_id,detailId,seqId,itemId,itemCode,itemName,outNumbers,unitId,unitName,
+                warehouseId,warehouseCode,warehouseName,demandPrice,demandMoney,taxRate,remark,zdy1,zdy2,zdy3)
         VALUES
         <foreach collection="list" item="item" separator=",">
             (
@@ -62,7 +64,8 @@
                 #{item.receiveOrderAmount.bizUnitAmount},
                 #{item.bizUnit.id},#{item.bizUnit.name},
                 #{item.deliverWarehouseInfo.id},#{item.deliverWarehouseInfo.code},#{item.deliverWarehouseInfo.name},
-                #{item.demandPrice},#{item.demandMoney},#{item.taxRate},#{item.remark}
+                #{item.demandPrice},#{item.demandMoney},#{item.taxRate},#{item.remark},
+                #{item.receiveOrderAmount.baseUnitAmount},#{item.baseUnit.id},#{item.baseUnit.name}
             )
         </foreach>
     </insert>
@@ -80,7 +83,7 @@
 
     <insert id="insertTCddDetail">
         INSERT INTO
-            sky_tc_mt_dd_detail (dd_id,detailId,itemCode,outNumbers,warehouseCode,warehouseName,demandPrice,demandMoney)
+            sky_tc_mt_dd_detail (dd_id,detailId,itemCode,outNumbers,unitName,warehouseCode,warehouseName,demandPrice,demandMoney)
         VALUES
         <foreach collection="list" item="item" separator=",">
             (
@@ -88,6 +91,7 @@
                 #{item.dtId},
                 #{item.itemCode},
                 #{item.outBusAmount},
+                #{item.unit},
                 #{item.warehouseCode},
                 #{item.warehouseName},
                 #{item.demandPrice},
@@ -98,37 +102,39 @@
 
 
     <insert id="insertHongrenWMSddAfter" useGeneratedKeys="true" keyProperty="id" parameterType="com.example.nuonuo.entity.hongren.wmsreturn.HongrenWMSddAfter">
-        INSERT INTO sky_tc_mt_dd_to_wms_return (dd_detail_id,deliveryOrderCode,state,createDate)
+        INSERT INTO sky_tc_mt_dd_to_wms_return (dd_id,deliveryOrderCode,state,createDate)
         VALUES (#{ddid},#{deliveryOrderCode},'1',CONVERT(varchar,getdate(),120))
     </insert>
 
-    <insert id="insertHongrenWMSddAfterDetail" parameterType="java.util.Map">
-        INSERT INTO sky_tc_mt_dd_to_wms_return_detail(dd_to_wms_return_id,itemCode,planQty)
-        values(#{ddidd},#{itemCode},#{outNumbers})
+    <insert id="insertHongrenWMSddAfterDetail">
+        INSERT INTO sky_tc_mt_dd_to_wms_return_detail(dd_to_wms_return_id,orderItemId,itemCode,planQty)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{ddid},
+                #{item.orderLineNo},
+                #{item.itemCode},
+                #{item.planQty}
+            )
+        </foreach>
     </insert>
 
-    <update id="updateWMSDDDetailByHongren">
-        update t2 set t2.actualQty = #{actualQty}
-        from sky_tc_mt_dd_to_wms_return t1,sky_tc_mt_dd_to_wms_return_detail t2,sky_tc_mt_dd_detail t3,sky_tc_mt_dd t4
-        where t1.id = t2.dd_to_wms_return_id and t2.itemCode = #{itemCode} and t2.actualQty is null and t1.dd_detail_id = t3.id and t3.dd_id = t4.id
-        and (
-            t1.deliveryOrderCode = #{deliveryOrderCode}
-            or t4.sourceVoucherCode = (
-                select top 1 k4.sourceVoucherCode from sky_tc_mt_dd_to_wms_return k1,sky_tc_mt_dd_detail k3,sky_tc_mt_dd k4
-                where k1.deliveryOrderCode = #{deliveryOrderCode} and k1.dd_detail_id = k3.id and k3.dd_id = k4.id
-            )
-        )
+    <update id="updateWMSDDDetailByHongren" parameterType="java.util.HashMap">
+        update t2 set t2.actualQty = #{actualQty},t2.actualDate = GETDATE()
+        from sky_tc_mt_dd_to_wms_return t1,sky_tc_mt_dd_to_wms_return_detail t2,sky_tc_mt_dd t4
+        where t1.id = t2.dd_to_wms_return_id and t2.actualQty is null and t1.dd_id = t4.id
+        and t4.voucherId = #{voucherId} and t2.itemCode = #{itemCode}
     </update>
 
-    <update id="updateWMSDDDetailByMida">
+    <update id="updateWMSDDDetailByMida" parameterType="java.util.HashMap">
         update t2
-        set t2.actualQty = #{qty}
+        set t2.actualQty = #{midaQty},t2.actualDate = GETDATE()
         from sky_tc_mt_dd_to_wms_return t1,sky_tc_mt_dd_to_wms_return_detail t2
-        where t1.deliveryOrderCode = #{orderNo} and t1.id = t2.dd_to_wms_return_id and t2.itemCode = #{itemCode} and t2.actualQty is null
+        where t1.deliveryOrderCode = #{midaorderNo} and t1.id = t2.dd_to_wms_return_id and t2.orderItemId = #{midaItemId} and t2.actualQty is null
     </update>
 
-    <insert id="insertMidaWMSddAfter" useGeneratedKeys="true" keyProperty="id">>
-        insert into sky_tc_mt_dd_to_wms_return(dd_detail_id,deliveryOrderid,deliveryOrderCode,state,createDate)
+    <insert id="insertMidaWMSddAfter" useGeneratedKeys="true" keyProperty="id" parameterType="com.example.nuonuo.entity.mida.ddreturn.MidaddReturn">
+        insert into sky_tc_mt_dd_to_wms_return(dd_id,deliveryOrderid,deliveryOrderCode,state,createDate)
         values(#{ddid},#{orderId},#{orderNo},'1',CONVERT(varchar,getdate(),120))
     </insert>
 
@@ -174,17 +180,12 @@
         where t1.id = t2.dd_id and t1.id = #{ddid}
     </select>
 
-    <select id="getTCDDdetailByHongRenChukuReturn" resultType="java.util.Map">
-        select top 1
-        t1.voucherId,t2.detailId
+    <select id="getTCDDdetailByHongRenChukuReturn" resultType="java.util.Map" parameterType="java.lang.String">
+        select
+        t1.voucherId,t2.detailId,(ISNULL(t4.actualQty,0)) as actualQty
         from sky_tc_mt_dd t1,sky_tc_mt_dd_detail t2,sky_tc_mt_dd_to_wms_return t3,sky_tc_mt_dd_to_wms_return_detail t4
-        where t1.id = t2.dd_id and t2.id = t3.dd_detail_id and t3.id = t4.dd_to_wms_return_id
-        and (
-            t3.deliveryOrderCode = #{deliveryOrderCode} or t1.sourceVoucherCode =
-                (select top 1 k4.sourceVoucherCode from sky_tc_mt_dd_to_wms_return k1,sky_tc_mt_dd_detail k3,sky_tc_mt_dd k4
-                where k1.deliveryOrderCode = #{deliveryOrderCode} and k1.dd_detail_id = k3.id and k3.dd_id = k4.id)
-        )
-        and t4.itemCode = #{itemCode} and t4.actualQty is null
+        where t1.id = t2.dd_id and t1.id = t3.dd_id and t3.id = t4.dd_to_wms_return_id
+        and t1.voucherId = #{voucherId} and t2.itemCode = t4.itemCode
     </select>
 
     <select id="getCTByTCSourceCode" parameterType="java.lang.String" resultType="java.lang.Integer">
@@ -192,10 +193,18 @@
     </select>
 
     <select id="getMTddDetailByMIDA" resultType="java.util.Map">
-        select top 1
-        t1.voucherId,t1.voucherCode,t2.itemId,t2.itemCode,t2.unitId,t2.detailId,t4.planQty
+        select
+            t1.voucherId,t1.voucherCode,t2.itemId,t2.itemCode,t2.unitId,t2.detailId,t4.planQty,ISNULL(t4.actualQty,0) as actualQty,
+            t2.warehouseId,t2.zdy1,t2.zdy2,t2.zdy3
         from sky_tc_mt_dd t1,sky_tc_mt_dd_detail t2,sky_tc_mt_dd_to_wms_return t3,sky_tc_mt_dd_to_wms_return_detail t4
-        where t1.id = t2.dd_id and t2.id = t3.dd_detail_id and t3.id = t4.dd_to_wms_return_id
-        and  t3.deliveryOrderCode = #{orderNo}  and t4.itemCode = #{itemCode}
+        where t1.id = t2.dd_id and t1.id = t3.dd_id and t3.id = t4.dd_to_wms_return_id
+        and  t3.deliveryOrderCode = #{orderNo}
+    </select>
+
+    <select id="getnewestTCBillNoByHongRenDeliveryOrderCode" parameterType="java.lang.String" resultType="java.lang.String">
+        select top 1 voucherId
+        from sky_tc_mt_dd where sourceVoucherCode =
+        (select top 1 k1.sourceVoucherCode from sky_tc_mt_dd k1,sky_tc_mt_dd_to_wms_return k2 where k2.deliveryOrderCode = #{deliveryOrderCode} and k1.id = k2.dd_id )
+        order by id desc
     </select>
 </mapper>

@@ -5,7 +5,6 @@ import java.util.List;
 public class MeituanPeisongChaidanDTO {
     private Long orgId;
     private String itemSn;
-    private int version;
     private List<SpiltDeliveryOrderDetailDTO> details;
 
     public Long getOrgId() {
@@ -22,14 +21,6 @@ public class MeituanPeisongChaidanDTO {
 
     public void setItemSn(String itemSn) {
         this.itemSn = itemSn;
-    }
-
-    public int getVersion() {
-        return version;
-    }
-
-    public void setVersion(int version) {
-        this.version = version;
     }
 
     public List<SpiltDeliveryOrderDetailDTO> getDetails() {

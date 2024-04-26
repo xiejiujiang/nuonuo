@@ -6,6 +6,8 @@ import com.alibaba.excel.support.ExcelTypeEnum;
 import com.alibaba.fastjson.JSONObject;
 import com.example.nuonuo.SAsubscribe.SACsubJsonRootBean;
 import com.example.nuonuo.entity.Meituan.MeituanPeiSong;
+import com.example.nuonuo.entity.Meituan.PeisongFaHuo.DeliveryItemDetailDTO;
+import com.example.nuonuo.entity.Meituan.PeisongFaHuo.ScmChainDeliveryDeliveryOrder1Request;
 import com.example.nuonuo.entity.Skd;
 import com.example.nuonuo.entity.mida.chukureturn.OrderDetailsRespose;
 import com.example.nuonuo.entity.mida.rukureturn.InboundStockInfo;
@@ -19,10 +21,16 @@ import com.example.nuonuo.saentity.SaleDeliveryDetails;
 import com.example.nuonuo.service.TokenService;
 import com.example.nuonuo.utils.*;
 import com.google.gson.Gson;
+import com.jiujin.scm.open.sdk.bo.CreatedOrderBo;
+import com.jiujin.scm.open.sdk.client.MidaOpenClient;
+import com.jiujin.scm.open.sdk.client.OpenClient;
+import com.jiujin.scm.open.sdk.request.CreatedOrderRequest;
+import com.jiujin.scm.open.sdk.response.GetBatchOrderResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
@@ -31,6 +39,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
@@ -135,8 +144,8 @@ public class TokenController {
                 JSONObject sajob;
                 JsonRootBean saentity;
                 try{
-                     sajob = JSONObject.parseObject(saDetailreslut);
-                     saentity =  sajob.toJavaObject(JsonRootBean.class);
+                    sajob = JSONObject.parseObject(saDetailreslut);
+                    saentity =  sajob.toJavaObject(JsonRootBean.class);
                 }catch (Exception e){
                     saDetailreslut = HttpClient.HttpPost("/tplus/api/v2/SaleDeliveryOpenApi/GetVoucherDTO",
                             json,
@@ -147,6 +156,10 @@ public class TokenController {
                     saentity =  sajob.toJavaObject(JsonRootBean.class);
                 }
                 //解析这个 saentity 销货单明细 信息，再获取对应的 仓库，批号，自由项 信息
+                String TransVehicleInfo = saentity.getData().getTransVehicleInfo();//车辆信息
+                LOGGER.info("TransVehicleInfo == " + TransVehicleInfo);
+                String DispatchAddress = saentity.getData().getAddress();//送货地址
+                LOGGER.info("DispatchAddress == " + DispatchAddress);
                 List<SaleDeliveryDetails> sadetaillist = saentity.getData().getSaleDeliveryDetails();
                 // 想了 当天  还是 通过SQL 来 获取吧
                 String inventoryCodes = "(";
@@ -191,7 +204,6 @@ public class TokenController {
                         sackreslutdatajob = JSONObject.parseObject(sackreslutdata);
                         xsckdcode = sackreslutdatajob.getString("Code");
                     }
-
                     String xsckdcodeJson = "{\n" +
                             "\t\"param\": {\n" +
                             "\t\t\"voucherCode\": \"" + xsckdcode + "\"\n" +
@@ -207,6 +219,12 @@ public class TokenController {
                     JSONObject xcresjob = JSONObject.parseObject(xcres);//审核结果
                     if ("0".equals(xcresjob.getString("code"))) {//审核成功!
                         orderMapper.updateXSCKAUDATE(xsckdcode, vourcherCode);
+                        //成功之后，把 这个 销售出库单上的 车辆信息（TransVehicleInfo） 和送货地址（DispatchAddress） 更新下
+                        Map<String,String> parss = new HashMap<String,String>();
+                        parss.put("xsckdcode",xsckdcode);
+                        parss.put("TransVehicleInfo",TransVehicleInfo);
+                        parss.put("DispatchAddress",DispatchAddress);
+                        orderMapper.updateXSCKParas(parss);
                     }
                 }
             }
@@ -462,7 +480,7 @@ public class TokenController {
     @RequestMapping(value="/goExcel", method = {RequestMethod.GET,RequestMethod.POST})
     public ModelAndView goCommit(HttpServletRequest request, HttpServletResponse response) {
         ModelAndView mav = new ModelAndView();
-        LOGGER.info("-------------------  确认无误后，点击确认，进入 周经理的excel 导入页面  ----------------------");
+        LOGGER.info("-------------------1  确认无误后，点击确认，进入 周经理的excel 导入页面  ----------------------");
         mav.setViewName("excel");
         return mav;
     }
@@ -676,19 +694,12 @@ public class TokenController {
         String res = "";
         try {
             String method = request.getParameter("method");// 不同业务  传入的是 不同的 method
-            LOGGER.error("method == " + method);
             String timestamp = request.getParameter("timestamp");
-            LOGGER.error("timestamp == " + timestamp);
             String format = request.getParameter("format");
-            LOGGER.error("format == " + format);
             String app_key = request.getParameter("app_key");
-            LOGGER.error("app_key == " + app_key);
             String sign = request.getParameter("sign");
-            LOGGER.error("sign == " + sign);
             String customerId = request.getParameter("customerId");
-            LOGGER.error("customerId == " + customerId);
             //以此验证 获取的 url参数和body参数 是否正确，后续可能涉及到 加密验证合法性。
-
             StringBuilder xmlData = new StringBuilder();
             BufferedReader reader = request.getReader();
             String line;
@@ -757,9 +768,9 @@ public class TokenController {
             while ((line = reader.readLine()) != null) {
                 xmlData.append(line);
             }
-            String decodeXmlStr = URLDecoder.decode(reqMessage, "UTF-8");
-            LOGGER.error("-----------美团推送配送单信息:" + decodeXmlStr);
-            MeituanPeiSong meituanPeiSong = JSONObject.parseObject(decodeXmlStr,MeituanPeiSong.class);
+            LOGGER.error("-----------美团推送配送单信息:" + reqMessage);
+            //String decodeXmlStr = URLDecoder.decode(reqMessage, "UTF-8");
+            MeituanPeiSong meituanPeiSong = JSONObject.parseObject(reqMessage,MeituanPeiSong.class);
             //判断 仓库，调用 弘人./ 米大. 进行订单发货出库了！！  下发给弘人WMS 或者 米大WMS 进行 发货出库
             int optype = meituanPeiSong.getOpType();// 1-创建、2-编辑、3-发货、4-撤销发货、5-删除、6-重推
             if(optype == 1){
