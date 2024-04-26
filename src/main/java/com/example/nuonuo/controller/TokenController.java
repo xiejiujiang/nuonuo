@@ -71,9 +71,9 @@ public class TokenController {
         //3月17日思考： 暂时不用接口来访问，直接在线访问后 拿到第一次的数据，并 复制 填入数据库表中接口（后续定时任务来更新）
         String ss = orderMapper.getDBtest();
         if( ss != null && !"".equals(ss)){//说明数据库链接成功！
-            LOGGER.error("------------------- 数据库链接成功 ,code == " + ss);
+            LOGGER.info("------------------- 数据库链接成功 ,code == " + ss);
         }
-        LOGGER.error("------------------- 美团 回调地址 code : " + code);
+        LOGGER.info("------------------- 美团 回调地址 code : " + code);
         return code;
     }
 
@@ -248,7 +248,7 @@ public class TokenController {
             InputStreamReader reader=new InputStreamReader(request.getInputStream(),"utf-8");
             BufferedReader buffer=new BufferedReader(reader);
             String params=buffer.readLine();
-            //LOGGER.error("请求参数: "+params);
+            //LOGGER.info("请求参数: "+params);
             JSONObject jsonObject = JSONObject.parseObject(params);
 
             String OrgId = jsonObject.getString("OrgId");
@@ -256,12 +256,12 @@ public class TokenController {
             Map<String,String> tmap = orderMapper.getDBAllOrgListByappKey(appKey);
 
             String vourcherCode = jsonObject.getString("Code");
-            //LOGGER.error("管理员的二开消息订阅Code =============== " + code);
-            //LOGGER.error("当前操作，0 保存，1 审核，2 弃审，3 删除，4 取消中止，5 中止");
+            //LOGGER.info("管理员的二开消息订阅Code =============== " + code);
+            //LOGGER.info("当前操作，0 保存，1 审核，2 弃审，3 删除，4 取消中止，5 中止");
             String state = jsonObject.getString("SendState");
-            //LOGGER.error("SendState =============== " + state);
+            //LOGGER.info("SendState =============== " + state);
             //String OrgId = jsonObject.getString("OrgId");
-            //LOGGER.error("OrgId =============== " + OrgId);
+            //LOGGER.info("OrgId =============== " + OrgId);
             //如果是销货单，并且是 审核 条件，
             if(state.equals("1")){
                 //销货单的单号  vourcherCode
@@ -644,13 +644,13 @@ public class TokenController {
             Map<String,String> tmap = orderMapper.getDBAllOrgListByappKeyMobile(mobile);
             String appKey = tmap.get("AppKey").toString();
             String value = entry.getValue();
-            LOGGER.error("---- 调用收款单的JSON == " + value);
+            LOGGER.info("---- 调用收款单的JSON == " + value);
             String rrr = HttpClient.HttpPost("/tplus/api/v2/ReceivePaymentVoucherOpenApi/NewCreate",
                     value,
                     appKey,
                     tmap.get("AppSecret").toString(),
                     tmap.get("access_token").toString());
-            LOGGER.error("---- 调用收款单的JSON的结果是 == " + rrr);
+            LOGGER.info("---- 调用收款单的JSON的结果是 == " + rrr);
             JSONObject rrrr = JSONObject.parseObject(rrr);
             String recode = rrrr.getString("code");
             if(!"0".equals(recode)){//说明创建失败了！
@@ -677,7 +677,7 @@ public class TokenController {
             while ((line = reader.readLine()) != null) {
                 xmlData.append(line);
             }
-            LOGGER.error(" ---------- 天财 反馈的 中心出库单（统配+外销）String == " + xmlData.toString());
+            LOGGER.info(" ---------- 天财 反馈的 中心出库单（统配+外销）String == " + xmlData.toString());
             TcZXCHUKUReturn tcZXCHUKUReturn = JSONObject.parseObject(xmlData.toString(),TcZXCHUKUReturn.class);
             //下发给弘人WMS 或者 米大WMS 进行 发货出库
             String fhckreturn = tokenService.addWMSfahuochukuddByTCdd(tcZXCHUKUReturn);
@@ -707,11 +707,11 @@ public class TokenController {
                 xmlData.append(line);
             }
             if("entryorder.confirm".equals(method)){//入库确认！
-                LOGGER.error("弘人入库反馈的 xml == " + xmlData.toString());
+                LOGGER.info("弘人入库反馈的 xml == " + xmlData.toString());
                 String rukuresult = tokenService.addHongrenRuKuToTCMT(xmlData.toString());
             }
             if("stockout.confirm".equals(method)){//出库确认！
-                LOGGER.error("弘人出库反馈的 xml == " + xmlData.toString());
+                LOGGER.info("弘人出库反馈的 xml == " + xmlData.toString());
                 String rukuresult = tokenService.addHongrenChuKuToTCMT(xmlData.toString());
             }
             res = "<?xml version=\"1.0\" encoding=\"utf-8\"?><response><flag>success</flag><code>0000</code><message>接收成功</message></response>";
@@ -733,7 +733,7 @@ public class TokenController {
             while ((line = reader.readLine()) != null) {
                 xmlData.append(line);
             }
-            LOGGER.error("------------米大推送的String == " + xmlData.toString());
+            LOGGER.info("------------米大推送的String == " + xmlData.toString());
             JSONObject job = JSONObject.parseObject(xmlData.toString());
             String sign = job.getString("sign");
             String message_type = job.getString("message_type");
@@ -768,7 +768,7 @@ public class TokenController {
             while ((line = reader.readLine()) != null) {
                 xmlData.append(line);
             }
-            LOGGER.error("-----------美团推送配送单信息:" + reqMessage);
+            LOGGER.info("-----------美团推送配送单信息:" + reqMessage);
             //String decodeXmlStr = URLDecoder.decode(reqMessage, "UTF-8");
             MeituanPeiSong meituanPeiSong = JSONObject.parseObject(reqMessage,MeituanPeiSong.class);
             //判断 仓库，调用 弘人./ 米大. 进行订单发货出库了！！  下发给弘人WMS 或者 米大WMS 进行 发货出库

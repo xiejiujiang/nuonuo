@@ -1,0 +1,28 @@
+<configuration>
+    <property name="LOGS" value="./logs" />
+    <appender name="RollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOGS}/myapp.log</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 每天滚动生成日志文件 -->
+            <fileNamePattern>${LOGS}/archived/myapp-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!-- 保留历史日志的最大天数 -->
+            <maxHistory>365</maxHistory>
+            <!-- 设置每个日志文件的最大大小 -->
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>30MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+    </appender>
+    <root level="INFO">
+        <appender-ref ref="RollingFile" />
+    </root>
+</configuration>
+
+<!--
+在这个配置中，日志文件将被存储在./logs/myapp.log中，并且每天午夜触发滚动，
+滚动的日志文件将存储在./logs/archived/目录下，文件名以当天日期命名，每个文件最大为100MB，并且保留最多30天的历史记录。
+确保Tomcat有权限写入./logs目录，并且在部署Spring Boot项目后，应用将按照这个配置生成和管理日志文件。
+-->

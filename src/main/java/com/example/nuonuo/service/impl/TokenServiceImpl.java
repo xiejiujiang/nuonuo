@@ -113,9 +113,9 @@ public class TokenServiceImpl implements TokenService {
                         updateMap.put("access_token",access_token);
                         updateMap.put("oldrefreshtoken",oldrefreshtoken);
                         orderMapper.updateTOrgToken(updateMap);
-                        LOGGER.error("------------ 成功 更新了一次数据库 T token-------------------- " );
+                        LOGGER.info("------------ 成功 更新了一次数据库 T token-------------------- " );
                     }else{
-                        LOGGER.error("----------------更新失败，检擦！！！---------------------- " + org.get("org_id").toString());
+                        LOGGER.info("----------------更新失败，检擦！！！---------------------- " + org.get("org_id").toString());
                     }
                 }
             }
@@ -145,14 +145,14 @@ public class TokenServiceImpl implements TokenService {
                             updateMap.put("access_token",access_token);
                             updateMap.put("oldrefreshtoken",oldrefreshtoken);
                             orderMapper.updateTOrgToken(updateMap);
-                            LOGGER.error("------------ 成功 更新了一次数据库 T token-------------------- " );
+                            LOGGER.info("------------ 成功 更新了一次数据库 T token-------------------- " );
                         }else{
-                            LOGGER.error("----------------更新失败，检擦！！！---------------------- " + org.get("org_id").toString());
+                            LOGGER.info("----------------更新失败，检擦！！！---------------------- " + org.get("org_id").toString());
                         }
                     }
                 }
             }catch (Exception ex){
-                LOGGER.error("---------------- T+ token更新 两次都TM失败了，检查一下看看！ ---------------------- " );
+                LOGGER.info("---------------- T+ token更新 两次都TM失败了，检查一下看看！ ---------------------- " );
                 ex.printStackTrace();
             }
         }finally {
@@ -191,7 +191,7 @@ public class TokenServiceImpl implements TokenService {
                     updateMap.put("accessToken",accessToken);
                     updateMap.put("refreshToken",refreshToken);
                     orderMapper.updateOrgToken(updateMap);
-                    LOGGER.error("------------ 成功 更新了一次数据库 美团 token-------------------- " );
+                    LOGGER.info("------------ 成功 更新了一次数据库 美团 token-------------------- " );
                 }
             }
         }catch (Exception e){
@@ -226,11 +226,11 @@ public class TokenServiceImpl implements TokenService {
                         updateMap.put("accessToken",accessToken);
                         updateMap.put("refreshToken",refreshToken);
                         orderMapper.updateOrgToken(updateMap);
-                        LOGGER.error("------------ 成功 更新了一次数据库 美团 token-------------------- " );
+                        LOGGER.info("------------ 成功 更新了一次数据库 美团 token-------------------- " );
                     }
                 }
             }catch (Exception ex){
-                LOGGER.error("---------------- 美团 token更新 两次都TM失败了，检查一下看看！ ---------------------- " );
+                LOGGER.info("---------------- 美团 token更新 两次都TM失败了，检查一下看看！ ---------------------- " );
                 ex.printStackTrace();
             }
         }finally {
@@ -256,7 +256,7 @@ public class TokenServiceImpl implements TokenService {
             String res = HttpClient.doGeturlparams(url,params,"");// result 这是一个JSON字符串！
             mdbhdresult = JSONObject.parseObject(res, TcBHDresult.class);//门店报货单
         }catch (IOException e){
-            LOGGER.error("获取天财门店报货单接口出错！确认参数和访问地址！！！");
+            LOGGER.info("获取天财门店报货单接口出错！确认参数和访问地址！！！");
             mdbhdresult = null;
         }
         //----------------根据  仓库+配送中心 下发 给 米大------------------------
@@ -312,7 +312,7 @@ public class TokenServiceImpl implements TokenService {
             String res = HttpClient.doGeturlparams(url,params,"");
             tcWXZXresult = JSONObject.parseObject(res, TcWXZXresult.class);
         }catch (IOException e){
-            LOGGER.error("获取天财 中心统配出库单/ 中心外销出库单 / 外销订单 ！确认参数和访问地址！！！");
+            LOGGER.info("获取天财 中心统配出库单/ 中心外销出库单 / 外销订单 ！确认参数和访问地址！！！");
             tcWXZXresult = null;
         }
         //根据  仓库+配送中心 下发 给 弘人  还是  米大
@@ -351,7 +351,7 @@ public class TokenServiceImpl implements TokenService {
             String res = HttpClient.doGeturlparams(url,params,"");// result 这是一个JSON字符串！
             mdbhdresult = JSONObject.parseObject(res, TcMDresult.class);//门店
         }catch (IOException e){
-            LOGGER.error("获取天财 门店 接口出错！确认参数和访问地址！！！");
+            LOGGER.info("获取天财 门店 接口出错！确认参数和访问地址！！！");
             mdbhdresult = null;
         }
         return mdbhdresult;
@@ -369,7 +369,7 @@ public class TokenServiceImpl implements TokenService {
             String res = HttpClient.doGeturlparams(url,params,"");// result 这是一个JSON字符串！
             mdbhdresult = JSONObject.parseObject(res, TcZXresult.class);//配送中心
         }catch (IOException e){
-            LOGGER.error("获取天财 配送中心 接口出错！确认参数和访问地址！！！");
+            LOGGER.info("获取天财 配送中心 接口出错！确认参数和访问地址！！！");
             mdbhdresult = null;
         }
         return mdbhdresult;
@@ -388,7 +388,7 @@ public class TokenServiceImpl implements TokenService {
             String res = HttpClient.doGeturlparams(url,params,"");// result 这是一个JSON字符串！
             mdbhdresult = JSONObject.parseObject(res, TcCKresult.class);//仓库
         }catch (IOException e){
-            LOGGER.error("获取天财 仓库 接口出错！确认参数和访问地址！！！");
+            LOGGER.info("获取天财 仓库 接口出错！确认参数和访问地址！！！");
             mdbhdresult = null;
         }
         return mdbhdresult;
@@ -451,7 +451,7 @@ public class TokenServiceImpl implements TokenService {
         hongrenFHDD.setOrderLines(orderLines);
         if(ct == 0){
             String hongrenreStr = addHongrenFaHuoChuku(hongrenFHDD);//下发弘人WMS出库
-            LOGGER.error("--------------天财出库单下发给弘人进行发货出库的结果是：" +hongrenreStr);
+            LOGGER.info("--------------天财出库单下发给弘人进行发货出库的结果是：" +hongrenreStr);
             if(hongrenreStr.contains("success")){
                 // 记录结果
                 HongrenWMSddAfter hongrenWMSddAfter = new HongrenWMSddAfter();
@@ -462,10 +462,10 @@ public class TokenServiceImpl implements TokenService {
                 // 记录对应明细
                 zhongtaiMapper.insertHongrenWMSddAfterDetail(ddidd,hongrenFHDD.getOrderLines().getOrderLine());
             }else{
-                LOGGER.error("--------------天财出库单下发给弘人进行发货出库 失败了，对应的天财订单号： " + tcZXCHUKUReturn.getBillNo());
+                LOGGER.info("--------------天财出库单下发给弘人进行发货出库 失败了，对应的天财订单号： " + tcZXCHUKUReturn.getBillNo());
             }
         }else{//只记录，不下发！
-            LOGGER.error("--------------只记录，不下发！----------------" );
+            LOGGER.info("--------------只记录，不下发！----------------" );
             HongrenWMSddAfter hongrenWMSddAfter = new HongrenWMSddAfter();
             hongrenWMSddAfter.setDdid(""+tcZXCHUKUReturn.getId());
             hongrenWMSddAfter.setDeliveryOrderCode(deliveryOrderCode);
@@ -488,7 +488,7 @@ public class TokenServiceImpl implements TokenService {
         body = body.replaceAll("~~~"," ");
         body = body.replaceAll("\\n","");
         body = body.substring(52,body.length());
-        LOGGER.error("--------------天财出库单下发给弘人 body 是： " + body);
+        LOGGER.info("--------------天财出库单下发给弘人 body 是： " + body);
         params.put("secret",secret);
         params.put("app_key","YJLF");
         params.put("customerId","YJLF");
@@ -501,7 +501,7 @@ public class TokenServiceImpl implements TokenService {
             params.put("timestamp",timestamp);
             params.put("v","2.0");
             String md5re = secret+"app_key"+params.get("app_key")+"customerId"+params.get("customerId")+"format"+params.get("format")+"method"+params.get("method")+"sign_method"+params.get("sign_method")+"timestamp"+params.get("timestamp")+"v"+params.get("v")+body+secret;
-            //LOGGER.error("--------------天财出库单下发给弘人 md5re 是： " + md5re);
+            //LOGGER.info("--------------天财出库单下发给弘人 md5re 是： " + md5re);
             String sign = Md5.md5(md5re);
             params.put("sign",sign.toUpperCase());//大写！
             String urltimestamp = URLEncoder.encode(timestamp,"UTF-8");
@@ -554,7 +554,7 @@ public class TokenServiceImpl implements TokenService {
             detail.add(tccgDetail);
             tccg.setDetail(detail);
             String tcres = addTCpurcharseOrder(tccg);
-            LOGGER.error("------- 弘人的入库反馈信息同步天财入库的结果是：" + tcres);
+            LOGGER.info("------- 弘人的入库反馈信息同步天财入库的结果是：" + tcres);
 
             Map<String,String> rukuMapDB = new HashMap<String,String>();
             rukuMapDB.put("sourceType","hongren");
@@ -601,7 +601,7 @@ public class TokenServiceImpl implements TokenService {
             List<Map<String,String>> orgList = orderMapper.getDBAllOrgList();
             String appAuthToken = orgList.get(0).get("accessToken").toString();
             String meituanRes = addMeituanRuku(meituanCg,"wybkd1o9lsh99ttx","112274",appAuthToken);
-            LOGGER.error("------- 米大的入库反馈信息同步美团入库的结果是：" + meituanRes);
+            LOGGER.info("------- 米大的入库反馈信息同步美团入库的结果是：" + meituanRes);
         }*/
         return "";
     }
@@ -644,7 +644,7 @@ public class TokenServiceImpl implements TokenService {
         }
         tcchukuReturn.setDetail(listdetail);
         String tCres = updateTCchukuReturn(tcchukuReturn);
-        LOGGER.error("------- 调用天财出库确认反写的结果是：" + tCres);
+        LOGGER.info("------- 调用天财出库确认反写的结果是：" + tCres);
 
         //美团 配送反写>?
         return "";
@@ -832,7 +832,7 @@ public class TokenServiceImpl implements TokenService {
             detail.add(tccgDetail);
             tccg.setDetail(detail);
             String tcres = addTCpurcharseOrder(tccg);
-            LOGGER.error("------- 米大的入库反馈信息同步天财入库的结果是：" + tcres);
+            LOGGER.info("------- 米大的入库反馈信息同步天财入库的结果是：" + tcres);
 
             Map<String,String> rukuMapDB = new HashMap<String,String>();
             rukuMapDB.put("sourceType","mida");
@@ -878,7 +878,7 @@ public class TokenServiceImpl implements TokenService {
             List<Map<String,String>> orgList = orderMapper.getDBAllOrgList();
             String appAuthToken = orgList.get(0).get("accessToken").toString();
             String meituanRes = addMeituanRuku(meituanCg,"wybkd1o9lsh99ttx","112274",appAuthToken);
-            LOGGER.error("------- 米大的入库反馈信息同步美团入库的结果是：" + meituanRes);
+            LOGGER.info("------- 米大的入库反馈信息同步美团入库的结果是：" + meituanRes);
         }*/
         return "";
     }
@@ -1050,7 +1050,7 @@ public class TokenServiceImpl implements TokenService {
             orderLines.setOrderLine(orderLinelist);
             hongrenFHDD.setOrderLines(orderLines);
             String hongrenreStr = addHongrenFaHuoChuku(hongrenFHDD);//下发弘人WMS出库
-            LOGGER.error("--------------美团配送单下发给弘人进行发货出库的结果是： " + hongrenreStr);
+            LOGGER.info("--------------美团配送单下发给弘人进行发货出库的结果是： " + hongrenreStr);
             if(hongrenreStr.contains("success")){
                 // 记录结果
                 HongrenWMSddAfter hongrenWMSddAfter = new HongrenWMSddAfter();
