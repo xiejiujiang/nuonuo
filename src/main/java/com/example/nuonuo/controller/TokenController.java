@@ -677,10 +677,10 @@ public class TokenController {
             while ((line = reader.readLine()) != null) {
                 xmlData.append(line);
             }
-            LOGGER.info(" ---------- 天财 反馈的 中心出库单（统配+外销）String == " + xmlData.toString());
+            LOGGER.info("--------------- 天财推送中心出库单（统配+外销）信息：" + xmlData.toString());
             TcZXCHUKUReturn tcZXCHUKUReturn = JSONObject.parseObject(xmlData.toString(),TcZXCHUKUReturn.class);
-            //下发给弘人WMS 或者 米大WMS 进行 发货出库
-            String fhckreturn = tokenService.addWMSfahuochukuddByTCdd(tcZXCHUKUReturn);
+            //下发给弘人WMS进行 发货出库
+            tokenService.addWMSfahuochukuddByTCdd(tcZXCHUKUReturn);
         } catch (Exception e) {
             e.printStackTrace();
             res = "{\"code\":\"9001\",\"message\":\"接收异常，需要重新推送！\"}";
@@ -707,12 +707,14 @@ public class TokenController {
                 xmlData.append(line);
             }
             if("entryorder.confirm".equals(method)){//入库确认！
-                LOGGER.info("弘人入库反馈的 xml == " + xmlData.toString());
-                String rukuresult = tokenService.addHongrenRuKuToTCMT(xmlData.toString());
+                LOGGER.info("------------ 弘人推送的入库信息是：" + xmlData.toString());
+                com.example.nuonuo.entity.hongren.rukuqr.Request hongrenruku = XmlToObjectConverter.convertXmlToObject(xmlData.toString(), com.example.nuonuo.entity.hongren.rukuqr.Request.class);
+                tokenService.addHongrenRuKuToTCMT(hongrenruku);
             }
             if("stockout.confirm".equals(method)){//出库确认！
-                LOGGER.info("弘人出库反馈的 xml == " + xmlData.toString());
-                String rukuresult = tokenService.addHongrenChuKuToTCMT(xmlData.toString());
+                LOGGER.info("------------ 弘人推送的出库信息是：" + xmlData.toString());
+                com.example.nuonuo.entity.hongren.chukuqr.Request hongrenchuku = XmlToObjectConverter.convertXmlToObject(xmlData.toString(), com.example.nuonuo.entity.hongren.chukuqr.Request.class);
+                tokenService.addHongrenChuKuToTCMT(hongrenchuku);
             }
             res = "<?xml version=\"1.0\" encoding=\"utf-8\"?><response><flag>success</flag><code>0000</code><message>接收成功</message></response>";
         } catch (Exception e) {
@@ -733,19 +735,20 @@ public class TokenController {
             while ((line = reader.readLine()) != null) {
                 xmlData.append(line);
             }
-            LOGGER.info("------------米大推送的String == " + xmlData.toString());
             JSONObject job = JSONObject.parseObject(xmlData.toString());
             String sign = job.getString("sign");
             String message_type = job.getString("message_type");
             String app_key = job.getString("app_key");
             String message = job.getString("message");
             if("ORDER_CHANGE".equals(message_type)){//ORDER_CHANGE:订单信息变更,就是米大出库发货
+                LOGGER.info("------------ 米大推送的出库信息是：" + message);
                 OrderDetailsRespose midachukureturn = JSONObject.parseObject(message,OrderDetailsRespose.class);
-                String rukuresult = tokenService.addMiDaChuKuToTCMT(midachukureturn);
+                tokenService.addMiDaChuKuToTCMT(midachukureturn);
             }
             if("STOCK_INBOUND".equals(message_type)){//STOCK_INBOUND:库存入库
+                LOGGER.info("------------ 米大推送的入库信息是：" + message);
                 InboundStockInfo midaruku = JSONObject.parseObject(message, InboundStockInfo.class);
-                String rukuresult = tokenService.addMiDaRuKuToTCMT(midaruku);
+                tokenService.addMiDaRuKuToTCMT(midaruku);
             }
             res = "{\"code\":\"0000\",\"message\":\"success\"}";
         } catch (Exception e) {
@@ -768,12 +771,12 @@ public class TokenController {
             while ((line = reader.readLine()) != null) {
                 xmlData.append(line);
             }
-            LOGGER.info("-----------美团推送配送单信息:" + reqMessage);
+            LOGGER.info("--------------- 美团推送配送单信息，此消息用于测试配送拆单，后续需要注释掉:" + reqMessage);
             //String decodeXmlStr = URLDecoder.decode(reqMessage, "UTF-8");
             MeituanPeiSong meituanPeiSong = JSONObject.parseObject(reqMessage,MeituanPeiSong.class);
-            //判断 仓库，调用 弘人./ 米大. 进行订单发货出库了！！  下发给弘人WMS 或者 米大WMS 进行 发货出库
             int optype = meituanPeiSong.getOpType();// 1-创建、2-编辑、3-发货、4-撤销发货、5-删除、6-重推
             if(optype == 1){
+                LOGGER.info("--------------- 美团推送配送单新增信息:" + reqMessage);
                 tokenService.addWMSfahuochukuddByMTdd(meituanPeiSong);
             }
             res = "{\"code\":\"0000\",\"message\":\"success\"}";

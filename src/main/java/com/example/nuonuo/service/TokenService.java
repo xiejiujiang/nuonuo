@@ -58,16 +58,17 @@ public interface TokenService {
     public String updateTCchukuReturn(TcchukuReturn tcchukuReturn);
 
     //根据 天财反馈到中台的 中心出库单（统配+外销）进行 下发WMS发货出库
-    public String addWMSfahuochukuddByTCdd(TcZXCHUKUReturn tcZXCHUKUReturn)throws Exception;
+    public void addWMSfahuochukuddByTCdd(TcZXCHUKUReturn tcZXCHUKUReturn)throws Exception;
 
     // --------------------------- 弘人WMS接口 --------------------------------- //
     //组装成 弘人WMS 的 出库发货mix 参数对象后，再调用接口 进行 发货出库mix
     public String addHongrenFaHuoChuku(Request req);
 
-    public String addHongrenRuKuToTCMT(String xml)throws Exception;//根据弘人WMS返回的入库数据 进行入库（天财/美团？）
+    //根据弘人WMS返回的入库数据 进行入库（天财/美团？）
+    public void addHongrenRuKuToTCMT(com.example.nuonuo.entity.hongren.rukuqr.Request hongrenruku);
 
-    public String addHongrenChuKuToTCMT(String xml);//根据弘人WMS返回的出库确认数据，反写到 天财 中心出库单？ 美团 配送单？
-
+    //根据弘人WMS返回的出库确认数据，反写到 天财 中心出库单？ 美团 配送单？
+    public void addHongrenChuKuToTCMT(com.example.nuonuo.entity.hongren.chukuqr.Request hongrenchuku)throws Exception;
 
     //--------------------------- 米大WMS接口 --------------------------------- //
     //发货订单创建接口
@@ -82,9 +83,9 @@ public interface TokenService {
     //批量根据skuId获取库存信息
     public BatchSkuCukun getBatchSkuStockInfo(BatchSkuStockInfo batchSkuStockInfo);
 
-    public String addMiDaChuKuToTCMT(OrderDetailsRespose midachukureturn)throws Exception;
+    public void addMiDaChuKuToTCMT(OrderDetailsRespose midachukureturn)throws Exception;
 
-    public String addMiDaRuKuToTCMT(InboundStockInfo midaruku)throws Exception;
+    public void addMiDaRuKuToTCMT(InboundStockInfo midaruku);
 
     //--------------------------- 美团接口 --------------------------------- //
     //总部-采购入库：https://developer.meituan.com/docs/api/rms-scmplus-inventory-api-v1-chain-stockPurchaseIn-create
@@ -94,7 +95,7 @@ public interface TokenService {
     public String addMeituanPeisongFaHuo(ScmChainDeliveryDeliveryOrder1Request dv, String signKey, String developerId, String appAuthToken);
 
     //根据 美团反馈到中台的 配送单 进行 下发WMS发货出库
-    public String addWMSfahuochukuddByMTdd(MeituanPeiSong meituanPeiSong)throws Exception;
+    public void addWMSfahuochukuddByMTdd(MeituanPeiSong meituanPeiSong);
 
     public String addMeituanPeisongChaiDan(MeituanPeisongChaidanDTO chaidanDTO, String signKey, String developerId, String appAuthToken);
 }

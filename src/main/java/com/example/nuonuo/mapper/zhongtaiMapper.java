@@ -51,6 +51,8 @@ public interface zhongtaiMapper {
 
     List<Map<String,Object>> getDDDetailListByddId(String ddid);
 
+    void updateSendWMSState(String ddid);
+
     List<Map<String,Object>> getTCDDdetailByHongRenChukuReturn(String voucherId);
 
     Integer getCTByTCSourceCode(String scode);
